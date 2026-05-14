@@ -4,7 +4,7 @@ import { ToastProvider } from './context/ToastContext';
 import { Feed } from './components/Feed';
 import { SettingsPanel } from './components/Settings';
 import { Settings, Briefcase, RefreshCw, AlertCircle } from 'lucide-react';
-import logo from './LOGO.PNG';
+import logo from './LOGO.png';
 import { cn } from './lib/utils';
 
 type Tab = 'feed' | 'settings';
