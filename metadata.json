@@ -1,0 +1,6 @@
+{
+  "name": "LinkedIn Opportunity Dashboard",
+  "description": "A minimalist dashboard for tracking LinkedIn job opportunities and creative roles, integrated with Supabase and n8n.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
