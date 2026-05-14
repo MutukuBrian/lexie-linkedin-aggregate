@@ -1,0 +1,651 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "id": "380995cb-7cd3-413b-8125-4ddeb556d66e",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -976,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 16
+            }
+          ]
+        }
+      },
+      "id": "97ba7775-7f1d-419e-ad94-47ab2a94789f",
+      "name": "Schedule Trigger 2",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -976,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "linkedin-refresh",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f7e6d5c4-b3a2-1098-fedc-ba9876543210",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        480
+      ],
+      "webhookId": "c8d9e0f1-a2b3-4567-89ab-cdef01234567"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "scraper_settings_lexiecoon",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "is_active",
+              "keyValue": "true"
+            }
+          ]
+        }
+      },
+      "id": "eac25721-3f7d-4ab6-9a22-9fe4e2f1e709",
+      "name": "Get configs",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        160
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "klGhZcBdsjT516Dm",
+          "name": "lexiecoon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "search_keywords_lexiecoon",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "is_active",
+              "keyValue": "true"
+            }
+          ]
+        }
+      },
+      "id": "58eb5e85-4cfa-45a3-8a97-00dafa40d12f",
+      "name": "Get Search Keywords",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        160
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "klGhZcBdsjT516Dm",
+          "name": "lexiecoon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c2afb46f-e8ae-4005-aed4-2ac751e597f3",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -208,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('Get configs').first().json;\nconst keyword = $('Loop Over Items').first().json.keyword;\n\nconst scrapeComments  = Boolean(config.scrape_comments);\nconst scrapeReactions = Boolean(config.scrape_reactions);\n\nconst body = {\n  searchQueries:        [keyword],\n  maxPosts:             config.max_posts    || 20,\n  postedLimit:          config.posted_limit || 'any',\n  sortBy:               config.sort_by      || 'date',\n  contentType:          config.content_type || 'all',\n  scrapeReactions,\n  postNestedReactions:  false,\n  scrapeComments,\n  postNestedComments:   false,\n};\n\nif (scrapeReactions) body.maxReactions = config.max_reactions || 5;\nif (scrapeComments)  body.maxComments  = config.max_comments  || 10;\n\nif (config.posted_limit_date)   body.postedLimitDate   = config.posted_limit_date;\nif (config.author_urls)         body.authorUrls        = config.author_urls.split(',').filter(Boolean);\nif (config.authors_companies)   body.authorCompanies   = config.authors_companies.split(',').filter(Boolean);\nif (config.mentioning_member)   body.mentioningMember  = config.mentioning_member.split(',').filter(Boolean);\nif (config.mentioning_company)  body.mentioningCompany = config.mentioning_company.split(',').filter(Boolean);\nif (config.authors_industry_id) body.authorsIndustryId = config.authors_industry_id.split(',').filter(Boolean);\nif (config.author_keywords)     body.authorKeywords    = config.author_keywords.split(',').map(k => k.trim()).filter(Boolean);\n\nreturn [{ json: { body, apifyToken: config.apify_token, searchQuery: keyword } }];"
+      },
+      "id": "0d316259-cd94-498d-b32f-ec340f6b75c2",
+      "name": "Build JSON body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.apify.com/v2/acts/harvestapi~linkedin-post-search/run-sync-get-dataset-items?token=' + $json.apifyToken }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "bae9e2c0-d7a2-4af7-bc85-b6a313ad0723",
+      "name": "LinkedIn Post Scraper (Sync)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        720,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "linkedin_posts_lexiecoon",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "poster_name",
+              "fieldValue": "={{ $json.author.name }}"
+            },
+            {
+              "fieldId": "poster_url",
+              "fieldValue": "={{ $json.author.linkedinUrl }}"
+            },
+            {
+              "fieldId": "post_content",
+              "fieldValue": "={{ $json.content }}"
+            },
+            {
+              "fieldId": "post_url",
+              "fieldValue": "={{ $json.linkedinUrl }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.postedAt.date }}"
+            },
+            {
+              "fieldId": "author_info",
+              "fieldValue": "={{ $json.author.info }}"
+            },
+            {
+              "fieldId": "avatar",
+              "fieldValue": "={{ $json.author.avatar }}"
+            },
+            {
+              "fieldId": "post_images",
+              "fieldValue": "={{ $json.postImages }}"
+            },
+            {
+              "fieldId": "engagement",
+              "fieldValue": "={{ $json.engagement }}"
+            },
+            {
+              "fieldId": "website",
+              "fieldValue": "={{ $json.author.website }}"
+            },
+            {
+              "fieldId": "website_label",
+              "fieldValue": "={{ $json.author.websiteLabel }}"
+            },
+            {
+              "fieldId": "id",
+              "fieldValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "id": "88b34508-0334-4aab-8a2b-d5de0ae4a61e",
+      "name": "Create a row",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        336
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "klGhZcBdsjT516Dm",
+          "name": "lexiecoon"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2080,
+        608
+      ],
+      "id": "f74a4eec-84a8-428e-8951-0c9a716949c9",
+      "name": "Respond to Webhook 400"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        992,
+        144
+      ],
+      "id": "dcef5a72-2ecc-48e3-9a5d-93babd4bcc7d",
+      "name": "Respond to Webhook: 200"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        432,
+        144
+      ],
+      "id": "561c289c-2758-4ad2-b1e4-9f3e9b0e5d36",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "linkedin_posts_lexiecoon",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "neq",
+              "keyValue": "null"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        256
+      ],
+      "id": "117b2c08-7ae4-4555-b2c7-2b1036fe047b",
+      "name": "Get Linkedin Posts",
+      "credentials": {
+        "supabaseApi": {
+          "id": "klGhZcBdsjT516Dm",
+          "name": "lexiecoon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        208,
+        256
+      ],
+      "id": "90380ace-894d-4a93-8172-094fd769006c",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "47d54b8c-f246-456c-980d-3c0d497d5228",
+              "leftValue": "={{ $('Aggregate').last().json.id }}",
+              "rightValue": "={{ $json.id }}",
+              "operator": {
+                "type": "array",
+                "operation": "notContains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        352
+      ],
+      "id": "1cac6537-d373-4bf5-a33f-7058ca0fa06d",
+      "name": "If Post exist already skip"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "linkedin_posts_lexiecoon",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "poster_name",
+              "fieldValue": "={{ $json.author.name }}"
+            },
+            {
+              "fieldId": "poster_url",
+              "fieldValue": "={{ $json.author.linkedinUrl }}"
+            },
+            {
+              "fieldId": "post_content",
+              "fieldValue": "={{ $json.content }}"
+            },
+            {
+              "fieldId": "post_url",
+              "fieldValue": "={{ $json.linkedinUrl }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.postedAt.date }}"
+            },
+            {
+              "fieldId": "author_info",
+              "fieldValue": "={{ $json.author.info }}"
+            },
+            {
+              "fieldId": "avatar",
+              "fieldValue": "={{ $json.author.avatar }}"
+            },
+            {
+              "fieldId": "post_images",
+              "fieldValue": "={{ $json.postImages }}"
+            },
+            {
+              "fieldId": "engagement",
+              "fieldValue": "={{ $json.engagement }}"
+            },
+            {
+              "fieldId": "website",
+              "fieldValue": "={{ $json.author.website }}"
+            },
+            {
+              "fieldId": "website_label",
+              "fieldValue": "={{ $json.author.websiteLabel }}"
+            }
+          ]
+        }
+      },
+      "id": "90eac378-93d2-4ab4-9a3b-f50004182021",
+      "name": "Update a row",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        592
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "klGhZcBdsjT516Dm",
+          "name": "lexiecoon"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        608
+      ],
+      "id": "22722f45-4e6e-4da0-9810-e78e3fafc348",
+      "name": "Limit1"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get configs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger 2": {
+      "main": [
+        [
+          {
+            "node": "Get configs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get configs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get configs": {
+      "main": [
+        [
+          {
+            "node": "Get Search Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Search Keywords": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Linkedin Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build JSON body": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Post Scraper (Sync)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Post Scraper (Sync)": {
+      "main": [
+        [
+          {
+            "node": "If Post exist already skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook: 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Linkedin Posts": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Build JSON body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Post exist already skip": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "522f3cbfb3a113ceb8e386c65c33c4c8d69cf5940cd29bfeeecc256dd7e86403"
+  }
+}

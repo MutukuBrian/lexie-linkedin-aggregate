@@ -38,54 +38,135 @@ n8n Workflow
 In your Supabase project, open the **SQL Editor** and run the following to create the required tables:
 
 ```sql
--- Stores scraped LinkedIn posts
-CREATE TABLE linkedin_posts_lexiecoon (
-  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_content text,
-  poster_name  text,
-  author_info  text,
-  post_url     text,
-  posted_at    timestamptz,
-  created_at   timestamptz DEFAULT now()
-);
+create table public.linkedin_posts_lexiecoon (
+  id text not null,
+  poster_name text null,
+  poster_url text null,
+  post_content text null,
+  post_url text null,
+  created_at timestamp with time zone null default now(),
+  author_info text null,
+  avatar text null,
+  post_images jsonb null,
+  engagement jsonb null,
+  "postVideo" jsonb null,
+  website text null,
+  website_label text null,
+  constraint linkedin_posts_pkey primary key (id),
+  constraint linkedin_posts_post_url_key unique (post_url)
+) TABLESPACE pg_default;
 
--- Stores your LinkedIn search queries
-CREATE TABLE search_keywords_lexiecoon (
-  keyword   text PRIMARY KEY,
-  is_active boolean DEFAULT true
-);
+create index IF not exists idx_posts_content on public.linkedin_posts_lexiecoon using gin (
+  to_tsvector(
+    'english'::regconfig,
+    COALESCE(post_content, ''::text)
+  )
+) TABLESPACE pg_default;
 
--- Stores all scraper configuration
-CREATE TABLE scraper_settings_lexiecoon (
-  id                   uuid PRIMARY KEY DEFAULT '00000000-0000-0000-0000-000000000000',
-  configs_name         text DEFAULT 'default',
-  is_active            boolean DEFAULT true,
-  location_terms       text,
-  exclude_terms        text,
-  max_posts            int DEFAULT 10,
-  posted_limit         text DEFAULT '24h',
-  posted_limit_date    text,
-  sort_by              text DEFAULT 'date',
-  content_type         text DEFAULT 'all',
-  author_urls          text,
-  authors_companies    text,
-  mentioning_member    text,
-  mentioning_company   text,
-  authors_industry_id  text,
-  start_page           int DEFAULT 1,
-  scrape_pages         int DEFAULT 1,
-  author_keywords      text,
-  scrape_reactions     boolean DEFAULT false,
-  max_reactions        int DEFAULT 5,
-  scrape_comments      boolean DEFAULT false,
-  max_comments         int DEFAULT 10,
-  apify_token          text,
-  updated_at           timestamptz DEFAULT now()
-);
+create index IF not exists idx_posts_created_at on public.linkedin_posts_lexiecoon using btree (created_at desc) TABLESPACE pg_default;
+
+create table public.scraper_settings_lexiecoon (
+  id uuid not null default gen_random_uuid (),
+  max_posts integer null default 10,
+  posted_limit text null default 'week'::text,
+  sort_by text null default 'date'::text,
+  content_type text null default 'all'::text,
+  scrape_pages integer null default 1,
+  author_keywords text null default ''::text,
+  scrape_reactions boolean null default false,
+  scrape_comments boolean null default false,
+  apify_token text null default ''::text,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  posted_limit_date text null default ''::text,
+  author_urls text null default ''::text,
+  authors_companies text null default ''::text,
+  mentioning_member text null default ''::text,
+  mentioning_company text null default ''::text,
+  authors_industry_id text null default ''::text,
+  start_page integer null default 1,
+  max_reactions integer null default 5,
+  max_comments integer null default 10,
+  configs_name text null,
+  is_active boolean null,
+  location_terms text null default '{}'::text[],
+  exclude_terms text null default '{}'::text[],
+  constraint scraper_settings_pkey primary key (id)
+) TABLESPACE pg_default;
+
+create table public.search_keywords_lexiecoon (
+  id uuid not null default gen_random_uuid (),
+  keyword text not null,
+  is_active boolean null default true,
+  created_at timestamp with time zone null default now(),
+  constraint search_keywords_pkey primary key (id),
+  constraint search_keywords_keyword_key unique (keyword)
+) TABLESPACE pg_default;
 
 -- Enable Realtime on the posts table so the dashboard updates live
-ALTER PUBLICATION supabase_realtime ADD TABLE linkedin_posts_lexiecoon;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.linkedin_posts_lexiecoon;
 ```
+
+### Row Level Security (RLS)
+
+All three tables require RLS enabled with the following policies. Run this after creating the tables:
+
+```sql
+-- linkedin_posts_lexiecoon
+ALTER TABLE public.linkedin_posts_lexiecoon ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "anon read posts"
+ON public.linkedin_posts_lexiecoon
+FOR SELECT TO anon, authenticated
+USING (true);
+
+-- scraper_settings_lexiecoon
+ALTER TABLE public.scraper_settings_lexiecoon ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public access"
+ON public.scraper_settings_lexiecoon
+FOR ALL TO public
+USING (true) WITH CHECK (true);
+
+CREATE POLICY "anon read settings"
+ON public.scraper_settings_lexiecoon
+FOR SELECT TO anon, authenticated
+USING (true);
+
+CREATE POLICY "anon update settings"
+ON public.scraper_settings_lexiecoon
+FOR UPDATE TO anon, authenticated
+USING (true) WITH CHECK (true);
+
+CREATE POLICY "anon upsert settings"
+ON public.scraper_settings_lexiecoon
+FOR INSERT TO anon, authenticated
+WITH CHECK (true);
+
+-- search_keywords_lexiecoon
+ALTER TABLE public.search_keywords_lexiecoon ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public all access to keywords"
+ON public.search_keywords_lexiecoon
+FOR ALL TO public
+USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public insert/update"
+ON public.search_keywords_lexiecoon
+FOR ALL TO public
+USING (true);
+
+CREATE POLICY "Allow public read access for keywords"
+ON public.search_keywords_lexiecoon
+FOR SELECT TO public
+USING (true);
+```
+
+> **Tip — migrating to a new Supabase project?** The table schema and RLS policies are not exported by default in most migration tools. Always re-run both the `CREATE TABLE` and `CREATE POLICY` blocks above in the new project, then verify with:
+> ```sql
+> SELECT tablename, policyname, roles, cmd FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename;
+> ```
+> If the feed shows empty despite having rows, missing RLS policies are the most likely cause — Supabase returns 0 rows silently when no permissive policy exists.
 
 After running the SQL:
 1. Go to **Project Settings → API** in Supabase.
