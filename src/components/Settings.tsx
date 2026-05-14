@@ -332,7 +332,7 @@ export const SettingsPanel: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-medium text-zinc-700">
             <Database className="w-4 h-4" />
-            database (Supabase)
+            Database (Supabase)
           </div>
           <div className="grid gap-4 p-6 border border-zinc-200 rounded-2xl bg-white shadow-sm">
             <div className="space-y-1.5">
