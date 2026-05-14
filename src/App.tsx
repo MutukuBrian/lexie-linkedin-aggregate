@@ -6,10 +6,9 @@ import { SettingsPanel } from './components/Settings';
 import { Settings, Briefcase, RefreshCw, AlertCircle } from 'lucide-react';
 import logo from './LOGO.png';
 import { cn } from './lib/utils';
+import { getSupabase } from './lib/supabase';
 
 type Tab = 'feed' | 'settings';
-
-const WEBHOOK_TIMEOUT_MS = 120_000; // 2 minutes
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('feed');
@@ -22,31 +21,35 @@ function Dashboard() {
     if (refreshing) return;
     setRefreshing(true);
     setWebhookError(null);
+    console.log('[Refresh] Button clicked');
+    console.log('[Refresh] supabaseUrl:', settings.supabaseUrl || '(empty)');
+    console.log('[Refresh] supabaseAnonKey:', settings.supabaseAnonKey ? '(set)' : '(empty)');
 
-    if (settings.n8nWebhookUrl) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
-        const res = await fetch(settings.n8nWebhookUrl, {
-          method: 'POST',
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        if (!res.ok) {
-          setWebhookError(`Webhook returned ${res.status} — feed not refreshed`);
-          setRefreshing(false);
-          return;
-        }
-      } catch (e: any) {
-        const msg = e?.name === 'AbortError'
-          ? 'Webhook timed out after 2 minutes'
-          : 'Webhook unreachable — check your n8n URL or CORS settings';
-        setWebhookError(msg);
+    try {
+      const supabase = getSupabase(settings.supabaseUrl, settings.supabaseAnonKey);
+      if (!supabase) {
+        console.warn('[Refresh] Supabase client is null — missing URL or key');
+        setWebhookError('Supabase not configured — go to Settings first');
         setRefreshing(false);
         return;
       }
+      console.log('[Refresh] Invoking Edge Function linkedin-refresh...');
+      const { data, error } = await supabase.functions.invoke('linkedin-refresh');
+      console.log('[Refresh] Response data:', data);
+      console.log('[Refresh] Response error:', error);
+      if (error) {
+        setWebhookError(`Refresh failed: ${error.message}`);
+        setRefreshing(false);
+        return;
+      }
+    } catch (e: any) {
+      console.error('[Refresh] Caught exception:', e);
+      setWebhookError('Could not reach Edge Function — check Supabase project status');
+      setRefreshing(false);
+      return;
     }
 
+    console.log('[Refresh] Done — incrementing refreshKey');
     setRefreshKey(k => k + 1);
     setRefreshing(false);
   };

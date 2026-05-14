@@ -1,25 +1,25 @@
 # LinkedIn Opportunity Dashboard
 
-A personal dashboard that aggregates LinkedIn posts into a clean, searchable feed. It uses **Apify** to scrape LinkedIn, **n8n** to automate the pipeline, and **Supabase** as the database — all configured through a built-in Settings panel.
+A personal dashboard that aggregates LinkedIn posts into a clean, searchable feed. It uses **Apify** to scrape LinkedIn, a **Supabase Edge Function** to automate the pipeline, and **Supabase** as the database — all configured through a built-in Settings panel.
 
 ---
 
 ## How It Works
 
 ```
-n8n Workflow
-  └── triggered by schedule or "Refresh Feed" button
+Supabase Edge Function (linkedin-refresh)
+  └── triggered by schedule (pg_cron) or "Refresh Feed" button
         └── reads scraper config from Supabase
               └── runs Apify LinkedIn Scraper Actor
-                    └── writes posts to Supabase
+                    └── upserts posts to Supabase
                           └── Dashboard updates in real-time
 ```
 
-1. You click **Refresh Feed** (or n8n runs on a schedule).
-2. n8n reads your scraper settings and search keywords from Supabase.
-3. n8n triggers the Apify LinkedIn Scraper with those settings.
-4. Apify scrapes LinkedIn and sends results back to n8n.
-5. n8n writes the posts into Supabase.
+1. You click **Refresh Feed** (or the Edge Function runs on a schedule).
+2. The Edge Function reads your scraper settings and search keywords from Supabase.
+3. It calls the Apify LinkedIn Scraper Actor with those settings.
+4. Apify scrapes LinkedIn and returns the results.
+5. The Edge Function upserts the posts into Supabase.
 6. The dashboard reflects the new posts instantly via Supabase Realtime.
 
 ---
@@ -28,7 +28,7 @@ n8n Workflow
 
 - [Node.js](https://nodejs.org/) v18+
 - A [Supabase](https://supabase.com/) project (free tier works)
-- An [n8n](https://n8n.io/) instance (self-hosted or cloud)
+- The [Supabase CLI](https://supabase.com/docs/guides/cli) installed (`npm install -g supabase`)
 - An [Apify](https://apify.com/) account with the LinkedIn Scraper Actor
 
 ---
@@ -212,10 +212,6 @@ Open the **Settings** tab in the app.
 | Scrape Reactions / Comments | Optionally fetch who reacted or commented on each post. |
 | Apify API Token | Your personal API token from [apify.com/account](https://console.apify.com/account/integrations). |
 
-### Automation Workflow (n8n)
-- Paste your **n8n webhook trigger URL**.
-- When you press **Refresh Feed**, the dashboard POSTs to this URL to trigger your n8n workflow.
-
 ### Claude Prompt
 - Optional text prepended when you click the **Copy** button on a post card.
 - Customize it to match your background so Claude (or any AI) can draft a relevant outreach response.
@@ -224,15 +220,70 @@ Click **Save All Settings** to persist everything.
 
 ---
 
-## Step 4 — n8n Workflow
+## Step 4 — Deploy the Edge Function
 
-Your n8n workflow should:
-1. Be triggered by a **Webhook** node (use the URL you entered in Settings).
-2. Read the latest scraper config and keywords from Supabase.
-3. Call the **Apify LinkedIn Scraper** Actor with those params.
-4. Insert the returned posts into `linkedin_posts_lexiecoon` in Supabase.
+The scraping pipeline runs as a Supabase Edge Function (`linkedin-refresh`) — no n8n required.
 
-The dashboard handles deduplication display-side; use Supabase's `ON CONFLICT` or a unique constraint on `post_url` if you want database-level deduplication.
+### Deploy
+
+```bash
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase functions deploy linkedin-refresh --no-verify-jwt
+```
+
+`YOUR_PROJECT_REF` is the short alphanumeric ID found at **Supabase Dashboard → Project Settings → General → Reference ID**.
+
+`--no-verify-jwt` is required so pg_cron can call the function without a user JWT.
+
+### Schedule automatic runs (pg_cron)
+
+Run this in the **Supabase SQL Editor** to trigger the function at 12pm and 4pm UTC daily:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- 12:00 PM UTC
+SELECT cron.schedule('linkedin-refresh-noon', '0 12 * * *', $$
+  SELECT net.http_post(
+    url     := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-refresh',
+    headers := '{"Content-Type":"application/json","Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb,
+    body    := '{}'::jsonb
+  );
+$$);
+
+-- 4:00 PM UTC
+SELECT cron.schedule('linkedin-refresh-afternoon', '0 16 * * *', $$
+  SELECT net.http_post(
+    url     := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-refresh',
+    headers := '{"Content-Type":"application/json","Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb,
+    body    := '{}'::jsonb
+  );
+$$);
+
+-- Verify:
+SELECT jobname, schedule FROM cron.job WHERE jobname LIKE 'linkedin%';
+```
+
+Replace `YOUR_PROJECT_REF` and `YOUR_ANON_KEY` (the anon public key from **Project Settings → API**).
+
+### Test manually
+
+```bash
+curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-refresh \
+  -H "Authorization: Bearer YOUR_ANON_KEY" \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+Expected response: `{"status":"accepted","message":"Scrape started in background"}` (HTTP 202).
+Posts will appear in the feed via Realtime within 1–5 minutes depending on keyword count.
+
+### View logs
+
+```bash
+supabase functions logs linkedin-refresh --tail
+```
 
 ---
 
@@ -243,7 +294,7 @@ The dashboard handles deduplication display-side; use Supabase's `ON CONFLICT` o
 | Search bar | Filters by post content or poster name (client-side, instant). |
 | Date pills (Today / Week / Month / Year / All) | Limits results by `created_at`. |
 | Filters button | Opens location include / exclude tag filters. Persisted to Supabase. |
-| Refresh Feed | Triggers your n8n webhook then reloads posts. |
+| Refresh Feed | Triggers the Edge Function then reloads posts. New posts also arrive automatically via Realtime. |
 | Copy (on post card) | Copies the post content prefixed with your Claude prompt. |
 
 ---
@@ -255,7 +306,7 @@ The dashboard handles deduplication display-side; use Supabase's `ON CONFLICT` o
 | Frontend | React 19 + TypeScript + Vite |
 | Styling | Tailwind CSS v4 |
 | Database | Supabase (PostgreSQL + Realtime) |
-| Automation | n8n |
+| Automation | Supabase Edge Functions (Deno) + pg_cron |
 | Scraping | Apify LinkedIn Scraper |
 
 ---
@@ -264,8 +315,10 @@ The dashboard handles deduplication display-side; use Supabase's `ON CONFLICT` o
 
 **"linkedin_posts_lexiecoon table not found"** — Run the SQL setup in Step 1.
 
-**Webhook timed out** — Apify scrapes can take 1–2 minutes. The dashboard waits up to 2 minutes; if your n8n workflow takes longer, trigger it on a schedule instead of via the button.
+**Refresh Feed shows an error** — Check that your Supabase URL and Anon Key are saved in Settings, and that the Edge Function is deployed (`supabase functions list`).
+
+**Posts not appearing after refresh** — The Edge Function responds immediately (202) and scrapes in the background. Check the logs with `supabase functions logs linkedin-refresh --tail`. Apify scrapes typically take 1–5 minutes per keyword.
 
 **Posts not updating in real-time** — Make sure you added `linkedin_posts_lexiecoon` to the `supabase_realtime` publication (last line of the SQL setup).
 
-**CORS error on webhook** — Make sure your n8n webhook node has **Response Mode** set to `Immediately` and that CORS is enabled in your n8n instance config.
+**pg_cron jobs not running** — Confirm `pg_cron` and `pg_net` extensions are enabled in **Supabase Dashboard → Database → Extensions**. Verify jobs exist with `SELECT jobname, schedule FROM cron.job;`.

@@ -8,4 +8,5 @@ coverage/
 !.env.example
 .claude
 .mcp.json
+supabase/.temp/
 

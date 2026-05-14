@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface Settings {
   supabaseUrl: string;
   supabaseAnonKey: string;
-  n8nWebhookUrl: string;
   claudePrompt: string;
   keywords: string[];
   locationTerms: string[];
@@ -27,6 +26,8 @@ interface Settings {
     scrapeComments: boolean;
     maxComments: number;
     apifyToken: string;
+    scheduleHour1: number;
+    scheduleHour2: number;
   };
 }
 
@@ -42,7 +43,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [settings, setSettings] = useState<Settings>({
     supabaseUrl: '',
     supabaseAnonKey: '',
-    n8nWebhookUrl: '',
     claudePrompt: "Please analyze this LinkedIn post and create a good cover letter for me based on my CV.",
     keywords: [],
     locationTerms: [],
@@ -66,6 +66,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       scrapeComments: false,
       maxComments: 10,
       apifyToken: '',
+      scheduleHour1: 12,
+      scheduleHour2: 16,
     }
   });
 

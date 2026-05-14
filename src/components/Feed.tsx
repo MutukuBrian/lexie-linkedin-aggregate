@@ -8,7 +8,7 @@ import { cn } from '../lib/utils';
 type DateRange = 'today' | 'week' | 'month' | 'year' | 'all';
 
 const DATE_RANGE_OPTIONS: { label: string; value: DateRange }[] = [
-  { label: 'Today', value: 'today' },
+  { label: 'Last 24h', value: 'today' },
   { label: 'Week', value: 'week' },
   { label: 'Month', value: 'month' },
   { label: 'Year', value: 'year' },
@@ -18,7 +18,7 @@ const DATE_RANGE_OPTIONS: { label: string; value: DateRange }[] = [
 const getDateCutoff = (range: DateRange): Date | null => {
   const now = new Date();
   if (range === 'today') {
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return new Date(now.getTime() - 24 * 60 * 60 * 1000);
   }
   if (range === 'week') {
     const d = new Date(now);

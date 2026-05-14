@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { Settings as SettingsIcon, Save, Info, Database, Webhook, Tag, Plus, X, Cpu, Key, Layers, Filter as FilterIcon, ChevronDown, ChevronUp, Bot } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Info, Database, Tag, Plus, X, Cpu, Key, Layers, Filter as FilterIcon, ChevronDown, ChevronUp, Bot, Clock } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getSupabase } from '../lib/supabase';
 
@@ -123,6 +123,18 @@ const TagInput: React.FC<TagInputProps> = ({ label, description, value, onChange
   );
 };
 
+const formatHour = (h: number) => {
+  const period = h < 12 ? 'AM' : 'PM';
+  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${hour12}:00 ${period}`;
+};
+
+// getTimezoneOffset() returns minutes to ADD to local to get UTC (positive = west of UTC)
+const TZ_OFFSET_HOURS = new Date().getTimezoneOffset() / 60;
+const LOCAL_TZ_NAME   = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const localToUtc = (h: number) => (h + TZ_OFFSET_HOURS + 24) % 24;
+const utcToLocal = (h: number) => (h - TZ_OFFSET_HOURS + 24) % 24;
+
 export const SettingsPanel: React.FC = () => {
   const { settings, updateSettings, isConfigured } = useSettings();
   const [formData, setFormData] = useState(settings);
@@ -185,6 +197,8 @@ export const SettingsPanel: React.FC = () => {
             scrapeComments: scraperResponse.data.scrape_comments,
             maxComments: scraperResponse.data.max_comments ?? 10,
             apifyToken: scraperResponse.data.apify_token,
+            scheduleHour1: utcToLocal(scraperResponse.data.schedule_hour_1 ?? 12),
+            scheduleHour2: utcToLocal(scraperResponse.data.schedule_hour_2 ?? 16),
           };
         }
 
@@ -259,8 +273,23 @@ export const SettingsPanel: React.FC = () => {
             scrape_comments: formData.scraper.scrapeComments,
             max_comments: formData.scraper.maxComments,
             apify_token: formData.scraper.apifyToken,
+            schedule_hour_1: localToUtc(formData.scraper.scheduleHour1),
+            schedule_hour_2: localToUtc(formData.scraper.scheduleHour2),
             updated_at: new Date().toISOString()
           });
+
+          // Update pg_cron schedule (requires SQL function — fails gracefully if not yet created)
+          try {
+            const { error: rpcErr } = await supabase.rpc('update_linkedin_schedule', {
+              hour1: localToUtc(formData.scraper.scheduleHour1),
+              hour2: localToUtc(formData.scraper.scheduleHour2),
+              project_url: formData.supabaseUrl,
+              anon_key: formData.supabaseAnonKey,
+            });
+            if (rpcErr) console.warn('[Schedule] RPC error (run the SQL setup):', rpcErr.message);
+          } catch (rpcEx) {
+            console.warn('[Schedule] RPC not available yet:', rpcEx);
+          }
 
           // Sync keywords
           if (formData.keywords.length > 0) {
@@ -312,6 +341,8 @@ export const SettingsPanel: React.FC = () => {
           scrape_comments: updatedScraper.scrapeComments,
           max_comments: updatedScraper.maxComments,
           apify_token: updatedScraper.apifyToken,
+          schedule_hour_1: localToUtc(updatedScraper.scheduleHour1),
+          schedule_hour_2: localToUtc(updatedScraper.scheduleHour2),
           updated_at: new Date().toISOString()
         });
       }
@@ -697,25 +728,42 @@ export const SettingsPanel: React.FC = () => {
           </div>
         </section>
 
-        {/* n8n Integration */}
+
+        {/* Auto-Refresh Schedule */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-medium text-zinc-700">
-            <Webhook className="w-4 h-4" />
-            Automation Workflow (n8n)
+            <Clock className="w-4 h-4" />
+            Auto-Refresh Schedule
           </div>
-          <div className="grid gap-4 p-6 border border-zinc-200 rounded-2xl bg-white shadow-sm">
-            <div className="space-y-1.5">
-              <label htmlFor="webhookUrl" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                Webhook Trigger URL
-              </label>
-              <input
-                id="webhookUrl"
-                type="text"
-                placeholder="https://n8n.your-instance.com/webhook/..."
-                className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-all font-mono"
-                value={formData.n8nWebhookUrl}
-                onChange={(e) => setFormData({ ...formData, n8nWebhookUrl: e.target.value })}
-              />
+          <div className="p-6 border border-zinc-200 rounded-2xl bg-white shadow-sm space-y-4">
+            <p className="text-xs text-zinc-500">
+              The scraper runs automatically at these two times each day in your local timezone (<span className="font-medium text-zinc-600">{LOCAL_TZ_NAME}</span>). Changes take effect when you click <strong>Save All Settings</strong>.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">First Run</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 bg-white"
+                  value={formData.scraper.scheduleHour1}
+                  onChange={(e) => updateScraper({ scheduleHour1: Number(e.target.value) })}
+                >
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <option key={h} value={h}>{formatHour(h)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Second Run</label>
+                <select
+                  className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 bg-white"
+                  value={formData.scraper.scheduleHour2}
+                  onChange={(e) => updateScraper({ scheduleHour2: Number(e.target.value) })}
+                >
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <option key={h} value={h}>{formatHour(h)}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </section>
@@ -729,7 +777,7 @@ export const SettingsPanel: React.FC = () => {
           <div className="p-6 border border-zinc-200 rounded-2xl bg-white shadow-sm space-y-2">
             <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
               Copy-for-Claude Prompt
-              <Tooltip content="This text is prepended when you click the Copy button on any post card. Edit it to match your background and what you're looking for.">
+              <Tooltip content="This text is added before the post text when you click the Copy button on any post card. Edit it to match your background and what you're looking for.">
                 <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
               </Tooltip>
             </label>
