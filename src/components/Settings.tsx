@@ -75,7 +75,7 @@ const TagInput: React.FC<TagInputProps> = ({ label, description, value, onChange
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{label}</label>
+        <label className="text-[10px] font-semibold text-zinc-400">{label}</label>
         <Tooltip content={description}>
           <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
         </Tooltip>
@@ -376,7 +376,7 @@ export const SettingsPanel: React.FC = () => {
           </div>
           <div className="grid gap-4 p-6 border border-zinc-200 rounded-2xl bg-white shadow-sm">
             <div className="space-y-1.5">
-              <label htmlFor="supabaseUrl" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+              <label htmlFor="supabaseUrl" className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
                 Project URL
                 <Tooltip content="The base URL of your Supabase project (e.g., https://xyz.supabase.co)">
                   <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
@@ -392,8 +392,8 @@ export const SettingsPanel: React.FC = () => {
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="supabaseAnonKey" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-                Anon Public Key
+              <label htmlFor="supabaseAnonKey" className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                Anon public key
                 <Tooltip content="Your Supabase project's anonymous public key.">
                   <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                 </Tooltip>
@@ -476,8 +476,8 @@ export const SettingsPanel: React.FC = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-                    Max Posts per Query
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Max posts per query
                     <Tooltip content="Maximum number of posts to scrape per each search query. If you set this to 0, it will scrape all posts.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
@@ -490,8 +490,8 @@ export const SettingsPanel: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-                    Time Filter
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Time filter
                     <Tooltip content="Fetch posts no older than X time. Options: '1h', '24h', 'week', 'month'.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
@@ -512,8 +512,8 @@ export const SettingsPanel: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-                    Custom Date Limit (Optional)
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Custom date limit (optional)
                     <Tooltip content="Scrape posts from now up to and including this date. It supports the Date time string format (e.g., 2024-01-01).">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
@@ -527,8 +527,8 @@ export const SettingsPanel: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-                    Sort By
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Sort by
                     <Tooltip content="Sort by 'relevance' or 'date'.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
@@ -543,8 +543,8 @@ export const SettingsPanel: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-                    Content Type
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Content type
                     <Tooltip content="Filter posts by content type. For example, if you choose 'Videos', it will scrape only posts containing videos.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
@@ -564,8 +564,8 @@ export const SettingsPanel: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-                    Pagination Strategy
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Pagination strategy
                     <Tooltip content="Choose the page number to start from and the number of pages to scrape. Each page contains 100 posts.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
@@ -599,7 +599,7 @@ export const SettingsPanel: React.FC = () => {
               
               <div className="grid gap-6">
                 <TagInput 
-                  label="Author Keywords" 
+                  label="Author keywords"
                   description="Scrape posts of profile-authors whose profiles contain at least one of these keywords in the headline or job title sections."
                   value={formData.scraper.authorKeywords}
                   onChange={(val) => updateScraper({ authorKeywords: val })}
@@ -607,7 +607,7 @@ export const SettingsPanel: React.FC = () => {
                 />
 
                 <TagInput 
-                  label="Profile or Company URLs" 
+                  label="Profile or company URLs"
                   description="List of LinkedIn profile or company URLs to scrape. Example: https://www.linkedin.com/in/williamhgates will fetch posted or re-posted content by Bill Gates."
                   value={formData.scraper.authorUrls}
                   onChange={(val) => updateScraper({ authorUrls: val })}
@@ -615,7 +615,7 @@ export const SettingsPanel: React.FC = () => {
                 />
 
                 <TagInput 
-                  label="Authors Industry IDs" 
+                  label="Authors industry IDs"
                   description="Scrape posts of profile-authors who assigned to LinkedIn Industry IDs of these industries. Full list: https://github.com/HarvestAPI/linkedin-industry-codes-v2/blob/main/linkedin_industry_code_v2_all_eng.csv"
                   value={formData.scraper.authorsIndustryId}
                   onChange={(val) => updateScraper({ authorsIndustryId: val })}
@@ -623,7 +623,7 @@ export const SettingsPanel: React.FC = () => {
                 />
 
                 <TagInput 
-                  label="Mentioning Members" 
+                  label="Mentioning members"
                   description="List of LinkedIn profile URLs of members mentioned in posts. Example: https://www.linkedin.com/in/williamhgates will fetch posts mentioning Bill Gates."
                   value={formData.scraper.mentioningMember}
                   onChange={(val) => updateScraper({ mentioningMember: val })}
@@ -631,7 +631,7 @@ export const SettingsPanel: React.FC = () => {
                 />
 
                 <TagInput 
-                  label="Mentioning Companies" 
+                  label="Mentioning companies" 
                   description="List of LinkedIn Company Names mentioned in posts. Example: https://www.linkedin.com/company/google will fetch posts mentioning Google."
                   value={formData.scraper.mentioningCompany}
                   onChange={(val) => updateScraper({ mentioningCompany: val })}
@@ -666,7 +666,7 @@ export const SettingsPanel: React.FC = () => {
                     </label>
                     {formData.scraper.scrapeReactions && (
                       <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1">
+                        <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-1">
                           Max per post
                           <Tooltip content="Maximum number of reactions to scrape per post. Default is 5.">
                             <Info className="w-2.5 h-2.5 text-zinc-300 cursor-help" />
@@ -699,7 +699,7 @@ export const SettingsPanel: React.FC = () => {
                     </label>
                     {formData.scraper.scrapeComments && (
                       <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1">
+                        <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-1">
                           Max per post
                           <Tooltip content="Maximum number of comments to scrape per post.">
                             <Info className="w-2.5 h-2.5 text-zinc-300 cursor-help" />
@@ -719,9 +719,9 @@ export const SettingsPanel: React.FC = () => {
             </div>
 
             <div className="pt-4 space-y-1.5 border-t border-zinc-100">
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              <div className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400">
                 <Key className="w-3 h-3" />
-                Apify API Token
+                Apify API token
                 <Tooltip content="Your Apify platform personal API token, used to run the LinkedIn Scraper Actor.">
                   <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                 </Tooltip>
@@ -750,7 +750,7 @@ export const SettingsPanel: React.FC = () => {
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">First Run</label>
+                <label className="text-[10px] font-semibold text-zinc-400">First run</label>
                 <select
                   className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 bg-white"
                   value={formData.scraper.scheduleHour1}
@@ -762,7 +762,7 @@ export const SettingsPanel: React.FC = () => {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Second Run</label>
+                <label className="text-[10px] font-semibold text-zinc-400">Second run</label>
                 <select
                   className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 bg-white"
                   value={formData.scraper.scheduleHour2}
@@ -784,9 +784,9 @@ export const SettingsPanel: React.FC = () => {
             Claude Prompt
           </div>
           <div className="p-6 border border-zinc-200 rounded-2xl bg-white shadow-sm space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-              Copy-for-Claude Prompt
-              <Tooltip content="This text is added before the post text when you click the Copy button on any post card. ">
+            <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+              Copy-for-Claude prompt
+              <Tooltip content="This text is added before the post text when you click the Copy button on any post card.">
                 <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
               </Tooltip>
             </label>
