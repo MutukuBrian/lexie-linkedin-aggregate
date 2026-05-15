@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { Settings as SettingsIcon, Save, Info, Database, Tag, Plus, X, Cpu, Key, Layers, Filter as FilterIcon, ChevronDown, ChevronUp, Bot, Clock } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Info, Database, Tag, Plus, X, Cpu, Key, Layers, Filter as FilterIcon, ChevronDown, ChevronUp, Bot, Clock, BookOpen } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getSupabase } from '../lib/supabase';
 
@@ -353,9 +353,18 @@ export const SettingsPanel: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 space-y-12 animate-in fade-in duration-500">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-medium tracking-tight text-zinc-900">Dashboard Settings</h1>
-        <p className="text-sm text-zinc-500">Configure your data sources, search criteria, and scraper behavior.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-medium tracking-tight text-zinc-900">Dashboard Settings</h1>
+          <p className="text-sm text-zinc-500">Configure your data sources, search criteria, and scraper behavior.</p>
+        </div>
+        <button
+          onClick={() => window.open('/user-guide.html', '_blank')}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-zinc-600 bg-white border border-zinc-200 hover:border-zinc-300 hover:text-zinc-900 hover:shadow-sm transition-all duration-200 shrink-0"
+        >
+          <BookOpen className="w-4 h-4" />
+          User Guide
+        </button>
       </div>
 
       <div className="space-y-8">
@@ -777,7 +786,7 @@ export const SettingsPanel: React.FC = () => {
           <div className="p-6 border border-zinc-200 rounded-2xl bg-white shadow-sm space-y-2">
             <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
               Copy-for-Claude Prompt
-              <Tooltip content="This text is added before the post text when you click the Copy button on any post card. Edit it to match your background and what you're looking for.">
+              <Tooltip content="This text is added before the post text when you click the Copy button on any post card. ">
                 <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
               </Tooltip>
             </label>

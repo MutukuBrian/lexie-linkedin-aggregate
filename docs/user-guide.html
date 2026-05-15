@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lexie's LinkedIn Aggregator — User Guide</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" />
+  <style>
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #0077B5;
+      --blue-dk: #005885;
+      --accent:  #00A0DC;
+      --green:   #057642;
+      --orange:  #E67E22;
+      --gray-50: #F9FAFB;
+      --gray-100:#F3F4F6;
+      --gray-200:#E5E7EB;
+      --gray-400:#9CA3AF;
+      --gray-600:#4B5563;
+      --gray-800:#1F2937;
+      --gray-900:#111827;
+      --text:    #1F2937;
+      --radius:  8px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+      background: #fff;
+    }
+
+    /* ─── Print / PDF optimisation ─── */
+    @media print {
+      body { font-size: 12px; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      section { page-break-inside: avoid; }
+      h2 { page-break-after: avoid; }
+    }
+
+    /* ─── Cover Page ─── */
+    .cover {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #004e87 0%, #0077B5 45%, #005885 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 80px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 20%, rgba(0,160,220,0.25) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(0,30,80,0.4) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .cover-inner { position: relative; z-index: 1; max-width: 640px; }
+    .cover-logo {
+      width: 96px; height: 96px;
+      background: #fff;
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 36px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.15);
+    }
+    .cover-logo img { width: 64px; height: 64px; object-fit: contain; }
+    .cover h1 {
+      font-size: 38px; font-weight: 800; letter-spacing: -0.5px;
+      color: #fff !important;
+      margin-bottom: 12px;
+      line-height: 1.15;
+    }
+    .cover .subtitle {
+      font-size: 17px; opacity: 0.8; margin-bottom: 48px; font-weight: 300;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+    .cover .divider {
+      width: 48px; height: 2px;
+      background: rgba(255,255,255,0.35); border-radius: 2px;
+      margin: 0 auto 40px;
+    }
+    .cover-meta {
+      font-size: 13px; line-height: 2.2; color: rgba(255,255,255,0.7);
+    }
+    .cover-meta strong { color: #fff; font-weight: 600; }
+    .cover-badge {
+      display: inline-block;
+      margin-bottom: 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 5px 18px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* ─── Layout ─── */
+    .wrapper { max-width: 860px; margin: 0 auto; padding: 60px 48px; }
+
+    /* ─── Typography ─── */
+    h1 { font-size: 32px; font-weight: 800; color: var(--blue-dk); margin-bottom: 8px; }
+    h2 {
+      font-size: 22px; font-weight: 700; color: var(--blue-dk);
+      margin: 56px 0 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--blue);
+      display: flex; align-items: center; gap: 10px;
+    }
+    h2 .icon { font-size: 18px; color: var(--blue); width: 24px; text-align: center; }
+    h3 { font-size: 16px; font-weight: 700; color: var(--gray-800); margin: 28px 0 10px; }
+    h4 { font-size: 14px; font-weight: 600; color: var(--blue-dk); margin: 20px 0 6px; }
+
+    p { margin-bottom: 14px; color: var(--gray-800); }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol { padding-left: 22px; margin-bottom: 14px; }
+    li { margin-bottom: 6px; color: var(--gray-800); }
+    li::marker { color: var(--blue); }
+
+    strong { color: var(--gray-900); }
+    em { color: var(--gray-600); }
+    a { color: var(--blue); text-decoration: none; }
+
+    /* ─── Table of Contents ─── */
+    .toc {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin: 32px 0 56px;
+    }
+    .toc h3 { margin-top: 0; color: var(--blue-dk); font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 8px; font-size: 14px; color: var(--blue); font-weight: 500; }
+    .toc li span { color: var(--gray-600); font-weight: 400; font-size: 13px; }
+
+    /* ─── Callout boxes ─── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 20px 0;
+      display: flex; gap: 14px; align-items: flex-start;
+      font-size: 13.5px;
+    }
+    .callout .icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; width: 22px; text-align: center; }
+    .callout-content strong { display: block; margin-bottom: 4px; }
+
+    .callout-info   { background: #EFF6FF; border-left: 4px solid #3B82F6; }
+    .callout-info   .icon { color: #3B82F6; }
+    .callout-tip    { background: #F0FDF4; border-left: 4px solid #22C55E; }
+    .callout-tip    .icon { color: #16A34A; }
+    .callout-warn   { background: #FFFBEB; border-left: 4px solid #F59E0B; }
+    .callout-warn   .icon { color: #D97706; }
+    .callout-key    { background: #F5F3FF; border-left: 4px solid #8B5CF6; }
+    .callout-key    .icon { color: #7C3AED; }
+
+    /* ─── Step boxes ─── */
+    .steps { counter-reset: steps; margin: 24px 0; }
+    .step {
+      display: flex; gap: 20px;
+      margin-bottom: 24px;
+      align-items: flex-start;
+    }
+    .step-num {
+      counter-increment: steps;
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .step-num::before { content: counter(steps); }
+    .step-body { flex: 1; padding-top: 4px; }
+    .step-body h4 { margin-top: 0; margin-bottom: 6px; }
+
+    /* ─── Code blocks ─── */
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 12.5px;
+      color: #be185d;
+    }
+    pre {
+      background: var(--gray-900);
+      color: #e5e7eb;
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      overflow-x: auto;
+      margin: 14px 0 20px;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+    pre code {
+      background: none; border: none; padding: 0; color: inherit;
+      font-size: inherit;
+    }
+    .code-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--gray-400);
+      margin-bottom: -6px; margin-top: 18px;
+    }
+
+    /* ─── Tables ─── */
+    .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th {
+      background: var(--blue-dk); color: #fff;
+      padding: 10px 14px; text-align: left; font-weight: 600;
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--gray-200); vertical-align: top; }
+    tr:nth-child(even) td { background: var(--gray-50); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ─── Feature cards ─── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 20px 0 28px;
+    }
+    .card {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      background: #fff;
+    }
+    .card .card-icon { font-size: 24px; margin-bottom: 12px; color: var(--blue); }
+    .card h4 { margin: 0 0 8px; color: var(--blue-dk); font-size: 14px; }
+    .card p { font-size: 13px; margin: 0; color: var(--gray-600); }
+
+    /* ─── Badge ─── */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .badge-blue   { background: #DBEAFE; color: #1D4ED8; }
+    .badge-green  { background: #DCFCE7; color: #166534; }
+    .badge-orange { background: #FEF3C7; color: #92400E; }
+    .badge-purple { background: #EDE9FE; color: #5B21B6; }
+
+    /* ─── Screenshot placeholder ─── */
+    .screenshot {
+      background: var(--gray-100);
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      color: var(--gray-400);
+      font-size: 13px;
+      margin: 16px 0 24px;
+    }
+
+    /* ─── Separator ─── */
+    hr { border: none; border-top: 1px solid var(--gray-200); margin: 48px 0; }
+
+    /* ─── Footer ─── */
+    .footer {
+      margin-top: 80px;
+      padding: 32px 48px;
+      background: var(--gray-900);
+      color: var(--gray-400);
+      font-size: 12px;
+      text-align: center;
+      line-height: 2;
+    }
+    .footer strong { color: #fff; }
+
+    /* ─── Print button ─── */
+    .print-btn {
+      position: fixed; bottom: 32px; right: 32px;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 12px 24px; font-size: 14px; font-weight: 600;
+      cursor: pointer; box-shadow: 0 4px 16px rgba(0,119,181,0.4);
+      transition: background 0.2s;
+      z-index: 100;
+    }
+    .print-btn:hover { background: var(--blue-dk); }
+
+    /* ─── Section intro ─── */
+    .section-intro {
+      background: linear-gradient(to right, #EFF6FF, #F5F3FF);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      font-size: 14px;
+      color: var(--gray-700);
+      border-left: 4px solid var(--blue);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Print button (hidden in PDF) -->
+<button class="print-btn no-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Save as PDF</button>
+
+<!-- ═══════════════════════════════════════
+     COVER PAGE
+═══════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="cover-logo">
+      <img src="LOGO.png" alt="Lexie's LinkedIn Aggregator logo" />
+    </div>
+    <div class="cover-badge">User Guide &amp; Setup Manual</div>
+    <h1>Lexie's LinkedIn Aggregator</h1>
+    <p class="subtitle">Everything you need to find and act on LinkedIn opportunities — automatically.</p>
+    <div class="divider"></div>
+    <div class="cover-meta">
+      <strong>Prepared for:</strong> Lexie Coon<br>
+      <strong>Prepared by:</strong> Bryan Mwendwa<br>
+      <strong>Version:</strong> 1.0 &nbsp;·&nbsp; <strong>Date:</strong> May 2026
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     BODY
+═══════════════════════════════════════ -->
+<div class="wrapper">
+
+  <!-- ─── Live App Banner ─── -->
+  <div style="background:linear-gradient(135deg,#0077B5,#005885);border-radius:12px;padding:28px 32px;margin-bottom:40px;color:#fff;text-align:center;">
+    <div style="font-size:32px;margin-bottom:10px;"><i class="fa-solid fa-rocket"></i></div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.75;margin-bottom:6px;">Your dashboard is live — no installation required</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:6px;">lexie-linkedin-aggregate.vercel.app</div>
+    <a href="https://lexie-linkedin-aggregate.vercel.app/" style="display:inline-block;margin-top:10px;background:#fff;color:#0077B5;font-weight:700;font-size:13px;padding:8px 24px;border-radius:6px;text-decoration:none;">Open Dashboard →</a>
+  </div>
+
+  <!-- ─── Key Notes ─── -->
+  <div class="callout callout-tip" style="margin-bottom:16px;">
+    <span class="icon"><i class="fa-solid fa-circle-check"></i></span>
+    <div class="callout-content">
+      <strong>Everything is already set up and tested</strong>
+      The Supabase database, automation scripts, and scheduling are all fully configured and working. There is no software to install — just open the link above in any browser and follow the one-time credential steps below.
+    </div>
+  </div>
+
+  <div class="callout callout-key" style="margin-bottom:16px;">
+    <span class="icon"><i class="fa-solid fa-key"></i></span>
+    <div class="callout-content">
+      <strong>About your credentials &amp; browser storage</strong>
+      Your Supabase URL, database key, and Apify token are saved in your browser's local storage — not on any external server. This means they stay saved even after you restart your laptop, as long as you use the same browser and don't clear your browser cache.<br><br>
+      <strong>Important:</strong> If you switch to a different browser (e.g., from Chrome to Safari), you will need to paste your credentials again in the Settings panel — they are tied to the specific browser you used.
+    </div>
+  </div>
+
+  <div class="callout callout-info" style="margin-bottom:40px;">
+    <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
+    <div class="callout-content">
+      <strong>A note on n8n</strong>
+      You may see references to "n8n" (a workflow automation tool) in some technical discussions — you do not need it. The Supabase approach was chosen as the better solution and is what powers this dashboard. n8n is not part of your setup.
+    </div>
+  </div>
+
+  <!-- ─── Table of Contents ─── -->
+  <div class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li>What This Dashboard Does <span>— Overview &amp; purpose</span></li>
+      <li>What You Need <span>— The two accounts required</span></li>
+      <li>First-Time Setup <span>— Entering your credentials (5 minutes)</span></li>
+      <li>Configuring the Dashboard <span>— All settings explained</span></li>
+      <li>Using the Dashboard Every Day <span>— Feed, search, filters, outreach</span></li>
+      <li>How Automatic Refreshes Work <span>— Scheduling &amp; timing</span></li>
+      <li>Troubleshooting <span>— Common issues &amp; fixes</span></li>
+      <li>Glossary <span>— Plain-English definitions</span></li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 1 — OVERVIEW
+  ═══════════════════════════════════════ -->
+  <h2><span class="icon"><i class="fa-solid fa-thumbtack"></i></span> 1. What This Dashboard Does</h2>
+
+  <div class="section-intro">
+    The Lexie's LinkedIn Aggregator automatically finds and displays LinkedIn posts from people who are hiring, looking for freelancers, or discussing topics you care about — all in one place, updated twice a day.
+  </div>
+
+  <p>Instead of manually scrolling through LinkedIn every day hoping to catch the right posts, this dashboard does the searching for you. You tell it what kinds of opportunities you're looking for (e.g., <em>"Freelance Video Editor"</em>, <em>"Hiring Producer"</em>), and it automatically collects matching LinkedIn posts and shows them in a clean, easy-to-browse feed.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <h4>Automated Search</h4>
+      <p>Searches LinkedIn for your chosen keywords so you don't have to scroll endlessly.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-layer-group"></i></div>
+      <h4>Organised Feed</h4>
+      <p>All matching posts stored in one searchable feed, sorted by date.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-clock"></i></div>
+      <h4>Twice-Daily Updates</h4>
+      <p>Automatically refreshes at two times you choose each day — no manual work needed.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+      <h4>One-Click Outreach</h4>
+      <p>Copy any post with your custom message template attached — ready to paste into Claude or ChatGPT.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-filter"></i></div>
+      <h4>Smart Filtering</h4>
+      <p>Filter by location, date range, or keywords to find the most relevant posts quickly.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-chart-simple"></i></div>
+      <h4>Engagement Data</h4>
+      <p>See likes, comments, and shares at a glance to spot the most active opportunities.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-info">
+    <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
+    <div class="callout-content">
+      <strong>How it works in plain English</strong>
+      Behind the scenes, the dashboard uses a service called Apify to scrape (collect) public LinkedIn posts matching your search terms. Those posts are saved to a secure private database (Supabase), and the dashboard displays them in real time. Your credentials are stored only in your browser — nothing is shared with third parties.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 2 — REQUIREMENTS
+  ═══════════════════════════════════════ -->
+  <h2 class="page-break"><span class="icon"><i class="fa-solid fa-toolbox"></i></span> 2. What You Need</h2>
+
+  <div class="section-intro">
+    Because the dashboard is already deployed online, you only need two things: a <strong>Supabase</strong> account (your private database) and an <strong>Apify</strong> account (the scraping service). Both are free to start. Total time: about <strong>5 minutes</strong>.
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th>What it's for</th>
+          <th>Cost</th>
+          <th>Where to sign up</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Supabase</strong></td>
+          <td>Your private database that stores all the LinkedIn posts the dashboard collects</td>
+          <td>Free tier</td>
+          <td>supabase.com</td>
+        </tr>
+        <tr>
+          <td><strong>Apify</strong></td>
+          <td>The service that automatically collects (scrapes) LinkedIn posts matching your search terms</td>
+          <td>Free starter plan</td>
+          <td>apify.com</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-warn">
+    <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+    <div class="callout-content">
+      <strong>Apify usage note</strong>
+      Apify's free plan includes a limited monthly scraping budget. For regular use (twice-daily scrapes with up to 10 posts each), the free tier is typically sufficient. If you need more posts or higher frequency, a paid plan starts at around $49/month.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 3 — FIRST-TIME SETUP
+  ═══════════════════════════════════════ -->
+  <h2 class="page-break"><span class="icon"><i class="fa-solid fa-gear"></i></span> 3. First-Time Setup</h2>
+
+  <div class="section-intro">
+    The dashboard is already live and running — you just need to connect it to your own Supabase database and Apify account by pasting your credentials into the Settings panel. This takes about <strong>5 minutes</strong> and only needs to be done once per browser.
+  </div>
+
+  <div class="callout callout-key" style="margin-bottom:28px;">
+    <span class="icon"><i class="fa-solid fa-key"></i></span>
+    <div class="callout-content">
+      <strong>Your credentials are already saved</strong>
+      If Bryan pasted your credentials on your behalf during handover, they are already in your browser. Simply open the dashboard, go to the <strong>Settings</strong> tab, and click <strong>Verify Schema Connection</strong> to confirm everything is working. If it shows a green tick, you're all set — skip to Section 4.
+    </div>
+  </div>
+
+  <!-- STEP A -->
+  <h3>Step A — Get Your Supabase Credentials</h3>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Log in to Supabase</h4>
+        <p>Go to <strong>supabase.com</strong> and sign in to your account. Open your LinkedIn Dashboard project.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Find your API credentials</h4>
+        <p>In the left sidebar, click <strong>Project Settings → API</strong>. You'll see two values you need:</p>
+        <ul>
+          <li><strong>Project URL</strong> — looks like <code>https://abcdefgh.supabase.co</code></li>
+          <li><strong>anon public key</strong> — a long string starting with <code>eyJ...</code></li>
+        </ul>
+        <p>Copy each one and keep them somewhere handy (e.g., a note on your desktop) — you'll paste them into the dashboard next.</p>
+        <div class="callout callout-warn">
+          <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          <div class="callout-content">The <strong>anon public key</strong> is safe to use inside the dashboard Settings panel. Do not share it publicly (e.g., don't post it on social media or send it in a public chat). Treat it like a private password.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP B -->
+  <h3>Step B — Get Your Apify API Token</h3>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Log in to Apify</h4>
+        <p>Go to <strong>apify.com</strong> and sign in. Click your profile icon in the top-right corner, then go to <strong>Settings → API &amp; Integrations</strong>.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Copy your Personal API Token</h4>
+        <p>Under <em>Personal API tokens</em>, copy the token shown. It starts with <code>apify_api_</code>. Keep it somewhere handy alongside your Supabase credentials.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP C -->
+  <h3>Step C — Enter Your Credentials in the Dashboard</h3>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Open the dashboard</h4>
+        <p>Go to <a href="https://lexie-linkedin-aggregate.vercel.app/" style="font-weight:700;">lexie-linkedin-aggregate.vercel.app</a> in your browser.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Open the Settings tab</h4>
+        <p>Click the <strong>Settings</strong> tab in the navigation bar at the top of the page.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Enter your Supabase credentials</h4>
+        <p>In the <strong>Database</strong> section (the first section), paste your <strong>Project URL</strong> and <strong>Anon Public Key</strong> into the two fields provided. Then click <strong>Verify Schema Connection</strong>.</p>
+        <p>You should see a green success message confirming your database is connected correctly.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Enter your Apify token</h4>
+        <p>Scroll down to the <strong>Scraper Settings</strong> section and paste your Apify API token into the <strong>Apify API Token</strong> field.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Add your search keywords</h4>
+        <p>In the <strong>Search Queries</strong> section, type a keyword and press <kbd>Enter</kbd> to add it. Repeat for each search term you want the dashboard to monitor (e.g., <em>Freelance Video Editor</em>, <em>Hiring Producer</em>).</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Save your settings</h4>
+        <p>Scroll to the bottom and click <strong>Save All Settings</strong>. Your credentials are now saved in your browser — you won't need to enter them again unless you clear your browser cache or switch to a different browser.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Do your first manual refresh</h4>
+        <p>Click the <strong>Refresh Feed</strong> button in the top navigation bar. Wait 1–3 minutes. Your first batch of LinkedIn posts will appear in the Feed tab automatically.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <span class="icon"><i class="fa-solid fa-lightbulb"></i></span>
+    <div class="callout-content">
+      <strong>Switching browsers or devices?</strong>
+      Your credentials are stored in the browser you used during setup. If you open the dashboard in a different browser (Chrome → Firefox, for example) or on a different device, just repeat Steps C3 and C4 to paste your credentials again — everything else (your posts, keywords, settings) is stored in the database and will be there waiting for you.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 4 — CONFIGURING SETTINGS
+  ═══════════════════════════════════════ -->
+  <h2 class="page-break"><span class="icon"><i class="fa-solid fa-screwdriver-wrench"></i></span> 4. Configuring the Dashboard</h2>
+
+  <div class="section-intro">
+    Click the <strong>Settings</strong> tab in the top navigation bar to open the settings panel. All changes are saved to your database when you click <strong>Save All Settings</strong> at the bottom.
+  </div>
+
+  <h3>Section 1 — Database Connection</h3>
+  <p>This is where you paste your Supabase Project URL and anon public key (covered in Section 3). Click <strong>Verify Schema Connection</strong> to confirm the connection is working — you should see a green success message. If credentials were already entered during handover, this should already show as connected.</p>
+
+  <h3>Section 2 — Search Queries</h3>
+  <p>Enter the keywords you want to search for on LinkedIn. Press <kbd>Enter</kbd> after each keyword to add it as a tag. Examples:</p>
+  <ul>
+    <li><em>Freelance Video Editor</em></li>
+    <li><em>Hiring Producer</em></li>
+    <li><em>Looking for Social Media Manager</em></li>
+    <li><em>Content Creator Opportunity</em></li>
+  </ul>
+  <p>Each keyword runs as a separate LinkedIn search — more keywords means more posts, but also uses more of your Apify budget.</p>
+
+  <h3>Section 3 — Scraper Settings</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Setting</th><th>What it does</th><th>Recommended</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Max Posts</strong></td>
+          <td>How many posts to collect per keyword per run</td>
+          <td>10–25</td>
+        </tr>
+        <tr>
+          <td><strong>Time Filter</strong></td>
+          <td>Only collect posts from the last Day / Week / Month</td>
+          <td>Week</td>
+        </tr>
+        <tr>
+          <td><strong>Sort By</strong></td>
+          <td>Sort results by Date (newest first) or Relevance</td>
+          <td>Date</td>
+        </tr>
+        <tr>
+          <td><strong>Content Type</strong></td>
+          <td>Filter to posts with images, videos, or all content</td>
+          <td>All</td>
+        </tr>
+        <tr>
+          <td><strong>Scrape Pages</strong></td>
+          <td>How many pages of results to scan (1 page ≈ 10 posts)</td>
+          <td>1–2</td>
+        </tr>
+        <tr>
+          <td><strong>Apify API Token</strong></td>
+          <td>Your secret Apify token from Phase B</td>
+          <td>Required</td>
+        </tr>
+        <tr>
+          <td><strong>Author Keywords</strong></td>
+          <td>Only collect posts from authors whose name contains these words</td>
+          <td>Leave blank unless needed</td>
+        </tr>
+        <tr>
+          <td><strong>Author URLs</strong></td>
+          <td>Collect posts only from specific LinkedIn profile URLs</td>
+          <td>Leave blank unless needed</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Section 4 — Extended Data Collection</h3>
+  <p>These are optional toggles that collect more detail from each post, at the cost of slightly more Apify usage.</p>
+  <ul>
+    <li><strong>Scrape Reactions</strong> — Collects who reacted to the post (👍 ❤️ etc.) and how many. Leave off unless you need this detail.</li>
+    <li><strong>Scrape Comments</strong> — Collects the comments on each post. Useful for understanding context, but increases scraping time.</li>
+  </ul>
+
+  <h3>Section 5 — Auto-Refresh Schedule</h3>
+  <p>Pick two times per day when you'd like the dashboard to automatically scrape LinkedIn. The times are set in <strong>your local timezone</strong> and automatically converted to the correct format in the database. A good choice is once in the morning (e.g., 9:00 AM) and once in the early afternoon (e.g., 2:00 PM).</p>
+
+  <h3>Section 6 — Claude Prompt</h3>
+  <p>When you click the <strong>Copy</strong> button on any post, this text is prepended to the copied content. Use it to set up a reusable AI prompt for writing outreach messages. For example:</p>
+  <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px 20px; margin:12px 0; font-style:italic; font-size:13.5px;">
+    "Based on this LinkedIn post, write a short, personalised outreach message for a freelance video editor reaching out to this person. Keep it under 4 sentences, friendly and professional."
+  </div>
+  <p>After copying, you paste the result into Claude (claude.ai) or ChatGPT to get a personalised message instantly.</p>
+
+  <div class="callout callout-tip">
+    <span class="icon"><i class="fa-solid fa-lightbulb"></i></span>
+    <div class="callout-content">
+      <strong>Don't forget to save!</strong>
+      After changing any settings, scroll to the bottom and click <strong>Save All Settings</strong>. Changes are not applied until saved.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 5 — DAILY USE
+  ═══════════════════════════════════════ -->
+  <h2 class="page-break"><span class="icon"><i class="fa-solid fa-desktop"></i></span> 5. Using the Dashboard Every Day</h2>
+
+  <div class="section-intro">
+    Once set up, your daily workflow is simple: open the dashboard, browse the feed, and copy posts you want to act on. The scraper runs automatically — you don't need to do anything to keep the feed fresh.
+  </div>
+
+  <h3>The Feed Tab</h3>
+  <p>The <strong>Feed</strong> tab (default view) shows all collected LinkedIn posts, newest first. Each post card displays:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Element</th><th>What it shows</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Profile photo &amp; name</strong></td><td>The LinkedIn user who made the post</td></tr>
+        <tr><td><strong>Headline</strong></td><td>Their job title / description from LinkedIn</td></tr>
+        <tr><td><strong>Post content</strong></td><td>The full text of the post (long posts can be expanded)</td></tr>
+        <tr><td><strong>Post images</strong></td><td>Any images attached to the post</td></tr>
+        <tr><td><strong>Engagement counts</strong></td><td>Number of likes, comments, and shares</td></tr>
+        <tr><td><strong>Website link</strong></td><td>A link to their website if included in the post</td></tr>
+        <tr><td><strong>LinkedIn button</strong></td><td>Opens the original post on LinkedIn</td></tr>
+        <tr><td><strong>Copy button</strong></td><td>Copies the post + your Claude prompt to clipboard</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Searching &amp; Filtering</h3>
+
+  <h4>Search bar</h4>
+  <p>Type any word or phrase in the search bar at the top of the feed. The dashboard instantly filters to show only posts matching that text (in the post content or the poster's name).</p>
+
+  <h4>Date filter pills</h4>
+  <p>Click one of the date buttons to narrow the feed by recency:</p>
+  <ul>
+    <li><span class="badge badge-blue">Today</span> — Posts scraped today</li>
+    <li><span class="badge badge-blue">Week</span> — Posts from the last 7 days</li>
+    <li><span class="badge badge-blue">Month</span> — Posts from the last 30 days</li>
+    <li><span class="badge badge-blue">Year</span> — Posts from the last 12 months</li>
+    <li><span class="badge badge-blue">All</span> — All posts ever collected</li>
+  </ul>
+
+  <h4>Filters panel</h4>
+  <p>Click the <strong>Filters</strong> button to open advanced filters:</p>
+  <ul>
+    <li><strong>Location include tags</strong> — Only show posts that mention these locations (e.g., <em>London</em>, <em>Remote</em>)</li>
+    <li><strong>Location exclude tags</strong> — Hide posts that mention these locations (e.g., <em>USA</em>, <em>India</em>)</li>
+  </ul>
+  <p>These filters are saved to your database automatically and persist across sessions.</p>
+
+  <h3>Refreshing the Feed Manually</h3>
+  <p>Click the <strong>Refresh Feed</strong> button (top-right of the navigation bar) to trigger a scrape immediately — without waiting for the next scheduled time. This is useful when you've just added new keywords or want the very latest posts right now.</p>
+
+  <div class="callout callout-info">
+    <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
+    <div class="callout-content">
+      <strong>Why does refreshing take a moment?</strong>
+      After clicking Refresh Feed, the dashboard sends a request to start scraping. The scraper runs in the background and can take 1–3 minutes depending on how many keywords you have. New posts will appear in the feed automatically as soon as they're collected — no need to reload the page.
+    </div>
+  </div>
+
+  <h3>Outreach Workflow</h3>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Find a promising post</h4>
+        <p>Browse the feed or search for a keyword. Look for posts from people who are actively hiring or looking for exactly your skills.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Click Copy</h4>
+        <p>Click the <strong>Copy</strong> button on the post card. The post content plus your Claude prompt is now in your clipboard.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Paste into Claude or ChatGPT</h4>
+        <p>Open <strong>claude.ai</strong> or <strong>chatgpt.com</strong>, paste (<kbd>Ctrl+V</kbd> or <kbd>Cmd+V</kbd>), and press Enter. The AI will write a personalised outreach message based on the post.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Send your message</h4>
+        <p>Review the AI-generated message, tweak if needed, then send it via LinkedIn's messaging feature or email.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 6 — SCHEDULING
+  ═══════════════════════════════════════ -->
+  <h2 class="page-break"><span class="icon"><i class="fa-solid fa-clock"></i></span> 6. How Automatic Refreshes Work</h2>
+
+  <div class="section-intro">
+    Once set up, the dashboard refreshes itself automatically at the two times you've configured — no action required from you.
+  </div>
+
+  <p>The refresh schedule works as follows:</p>
+  <ol>
+    <li>At the scheduled times, a database job (called a <em>cron job</em>) automatically triggers the scraper.</li>
+    <li>The scraper reads your active search keywords from the database.</li>
+    <li>For each keyword, it calls Apify to collect matching LinkedIn posts.</li>
+    <li>New posts are saved to the database and appear in your feed in real time.</li>
+    <li>Duplicate posts (posts you already have) are automatically skipped — you won't see the same post twice.</li>
+  </ol>
+
+  <div class="callout callout-key">
+    <span class="icon"><i class="fa-solid fa-key"></i></span>
+    <div class="callout-content">
+      <strong>Changing your schedule</strong>
+      You can change your refresh times at any time in the <strong>Settings → Auto-Refresh Schedule</strong> section. Enter the times in your local timezone — the dashboard converts them automatically. Remember to click <strong>Save All Settings</strong> after making changes.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 7 — TROUBLESHOOTING
+  ═══════════════════════════════════════ -->
+  <h2 class="page-break"><span class="icon"><i class="fa-solid fa-wrench"></i></span> 7. Troubleshooting</h2>
+
+  <div class="section-intro">
+    Here are the most common issues and how to fix them quickly.
+  </div>
+
+  <h3>Dashboard shows a blank screen or won't load</h3>
+  <ul>
+    <li>Make sure you're visiting the correct URL: <strong>lexie-linkedin-aggregate.vercel.app</strong></li>
+    <li>Try doing a hard refresh: press <kbd>Ctrl + Shift + R</kbd> (Windows) or <kbd>Cmd + Shift + R</kbd> (Mac).</li>
+    <li>Try opening the dashboard in a different browser (Chrome, Edge, Firefox) to rule out a browser issue.</li>
+    <li>If the page loads but shows no data, check that your credentials are entered correctly in the Settings tab.</li>
+  </ul>
+
+  <h3>Opened the dashboard in a new browser and nothing is saved</h3>
+  <ul>
+    <li>This is expected — credentials are saved per browser. Open the Settings tab, paste your Supabase URL, anon key, and Apify token, then click <strong>Save All Settings</strong>.</li>
+    <li>Your posts and keywords are stored in the database, so they will reappear once the credentials are re-entered.</li>
+  </ul>
+
+  <h3>"Connection failed" when testing the database</h3>
+  <ul>
+    <li>Double-check the Supabase URL and anon key in Settings — make sure there are no extra spaces at the beginning or end.</li>
+    <li>Make sure you ran all three CREATE TABLE SQL statements and didn't get an error.</li>
+    <li>Verify your Supabase project is not paused (free projects pause after a period of inactivity — log in to supabase.com and check).</li>
+  </ul>
+
+  <h3>Feed is empty after clicking "Refresh Feed"</h3>
+  <ul>
+    <li>Make sure you've added at least one search keyword in Settings → Search Queries.</li>
+    <li>Check that your Apify API token is correct — test it by logging into apify.com and checking your account.</li>
+    <li>Wait 2–3 minutes after clicking Refresh — scraping takes time.</li>
+    <li>Check the <strong>Date filter</strong> — if it's set to <em>Today</em> and no posts were scraped yet today, switch to <em>All</em>.</li>
+  </ul>
+
+  <h3>The automatic schedule isn't running</h3>
+  <ul>
+    <li>Verify the pg_cron SQL was run successfully in Supabase (no error message when you ran it).</li>
+    <li>Make sure the Edge Function is deployed — run <code>supabase functions deploy linkedin-refresh --no-verify-jwt</code> again if unsure.</li>
+    <li>Note that scheduled times are in UTC — if you're on a different timezone, double-check the conversion.</li>
+  </ul>
+
+  <h3>"Refresh Feed" shows an error banner</h3>
+  <ul>
+    <li>The automation script may not be deployed. Run the deploy command from Phase D, Step 4.</li>
+    <li>Check that the Supabase Edge Function is listed under <strong>Edge Functions</strong> in your Supabase project dashboard.</li>
+  </ul>
+
+  <h3>Posts not showing despite a successful refresh</h3>
+  <ul>
+    <li>LinkedIn may not have returned results for your keywords on that particular run — try broader keywords.</li>
+    <li>Apify's free plan may have run out of monthly compute budget — check your usage on apify.com.</li>
+    <li>Make sure the <strong>Time Filter</strong> in Settings isn't too narrow (e.g., set to "Day" when posts were published a week ago).</li>
+  </ul>
+
+  <div class="callout callout-info">
+    <span class="icon"><i class="fa-solid fa-comment-dots"></i></span>
+    <div class="callout-content">
+      <strong>Still stuck?</strong>
+      Send a screenshot of the error and the page you're on to Bryan (bryanmwendwah00@gmail.com) for support.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 8 — GLOSSARY
+  ═══════════════════════════════════════ -->
+  <h2 class="page-break"><span class="icon"><i class="fa-solid fa-book-open"></i></span> 8. Glossary</h2>
+
+  <div class="section-intro">
+    Plain-English definitions for the technical terms used in this guide.
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Term</th><th>Plain-English Explanation</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Supabase</strong></td>
+          <td>A cloud service that acts as your dashboard's private database. Think of it as a very organised spreadsheet stored securely online, which your dashboard reads and writes to.</td>
+        </tr>
+        <tr>
+          <td><strong>Apify</strong></td>
+          <td>A service that visits websites (like LinkedIn) and collects data from them automatically. It's like sending a very fast robot to scroll through LinkedIn and copy down posts for you.</td>
+        </tr>
+        <tr>
+          <td><strong>Scraping</strong></td>
+          <td>The process of automatically reading and collecting data from a website. The dashboard "scrapes" LinkedIn to get the posts.</td>
+        </tr>
+        <tr>
+          <td><strong>API Token / API Key</strong></td>
+          <td>A secret password that identifies you when your dashboard communicates with a service like Apify or Supabase. Never share these with others.</td>
+        </tr>
+        <tr>
+          <td><strong>Edge Function</strong></td>
+          <td>A small program that runs on Supabase's servers (not on your computer). It handles the actual scraping in the background.</td>
+        </tr>
+        <tr>
+          <td><strong>Cron job</strong></td>
+          <td>A scheduled task that runs automatically at specific times — like setting an alarm that triggers the scraper without you having to do anything.</td>
+        </tr>
+        <tr>
+          <td><strong>Realtime</strong></td>
+          <td>A feature that makes new posts appear in your feed instantly without you needing to reload the page.</td>
+        </tr>
+        <tr>
+          <td><strong>RLS / Row-Level Security</strong></td>
+          <td>A database security setting. The SQL you ran in setup configures it to allow the dashboard to access your data.</td>
+        </tr>
+        <tr>
+          <td><strong>UTC</strong></td>
+          <td>Universal Time Coordinated — a global time standard. Your schedule times are stored in UTC internally but displayed in your local timezone in the dashboard.</td>
+        </tr>
+        <tr>
+          <td><strong>Vercel deployment</strong></td>
+          <td>The process of publishing the dashboard to the internet so it can be accessed at a public URL. This was done once during the build — you don't need to do anything to keep it running.</td>
+        </tr>
+        <tr>
+          <td><strong>Anon Key</strong></td>
+          <td>Short for "anonymous key" — a Supabase key that allows the dashboard to connect to your database. It's safe to use in the dashboard settings but should not be published publicly.</td>
+        </tr>
+        <tr>
+          <td><strong>SQL</strong></td>
+          <td>Structured Query Language — the commands used to set up the database tables. This was handled during the build; you don't need to use or understand SQL to operate the dashboard.</td>
+        </tr>
+        <tr>
+          <td><strong>Browser local storage</strong></td>
+          <td>A small storage area inside your browser where the dashboard saves your credentials (Supabase URL, key, Apify token). It's specific to each browser and persists until you clear your cache. Your posts and settings are stored in the database, not in local storage.</td>
+        </tr>
+        <tr>
+          <td><strong>Vercel</strong></td>
+          <td>The hosting service that serves the dashboard website. It keeps the dashboard available 24/7 at <em>lexie-linkedin-aggregate.vercel.app</em> without you needing to run anything on your computer.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- ─── Quick Reference ─── -->
+  <h2><span class="icon"><i class="fa-solid fa-bolt"></i></span> Quick Reference Card</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-rocket"></i></div>
+      <h4>Open the dashboard</h4>
+      <p>Visit <strong>lexie-linkedin-aggregate.vercel.app</strong> in any browser — no installation needed.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+      <h4>Manual refresh</h4>
+      <p>Click <strong>Refresh Feed</strong> button in the navigation bar. Wait 1–3 minutes.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <h4>Search posts</h4>
+      <p>Type in the search bar at the top of the Feed tab.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+      <h4>Copy for outreach</h4>
+      <p>Click <strong>Copy</strong> on any post card → paste into Claude / ChatGPT.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-gear"></i></div>
+      <h4>Change settings</h4>
+      <p>Click <strong>Settings</strong> tab → make changes → click <strong>Save All Settings</strong>.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-solid fa-calendar-days"></i></div>
+      <h4>Auto-refresh times</h4>
+      <p>Settings → Auto-Refresh Schedule → pick two times → Save.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── Footer ─── -->
+<div class="footer">
+  <strong>Lexie's LinkedIn Aggregator</strong> — User Guide v1.0<br>
+  Prepared by <strong>Bryan Mwendwa</strong> for <strong>Lexie Coon</strong> · May 2026<br>
+  For support: bryanmwendwah00@gmail.com
+</div>
+
+</body>
+</html>
