@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { Feed } from './components/Feed';
@@ -16,42 +16,44 @@ function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [webhookError, setWebhookError] = useState<string | null>(null);
   const { settings } = useSettings();
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Called by Feed when the first realtime INSERT fires after a refresh.
+  const onJobsArrived = useCallback(() => {
+    if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+    setRefreshing(false);
+    setRefreshKey(k => k + 1);
+  }, []);
 
   const handleRefresh = async () => {
     if (refreshing) return;
     setRefreshing(true);
     setWebhookError(null);
-    console.log('[Refresh] Button clicked');
-    console.log('[Refresh] supabaseUrl:', settings.supabaseUrl || '(empty)');
-    console.log('[Refresh] supabaseAnonKey:', settings.supabaseAnonKey ? '(set)' : '(empty)');
 
     try {
       const supabase = getSupabase(settings.supabaseUrl, settings.supabaseAnonKey);
       if (!supabase) {
-        console.warn('[Refresh] Supabase client is null — missing URL or key');
         setWebhookError('Supabase not configured — go to Settings first');
         setRefreshing(false);
         return;
       }
-      console.log('[Refresh] Invoking Edge Function linkedin-refresh...');
-      const { data, error } = await supabase.functions.invoke('linkedin-refresh');
-      console.log('[Refresh] Response data:', data);
-      console.log('[Refresh] Response error:', error);
+      const { error } = await supabase.functions.invoke('linkedin-refresh');
       if (error) {
         setWebhookError(`Refresh failed: ${error.message}`);
         setRefreshing(false);
         return;
       }
+      // 202 received — scraping is running in background.
+      // Keep the spinner going until Feed reports a realtime INSERT,
+      // or until the 3-minute safety timeout fires.
+      safetyTimerRef.current = setTimeout(() => {
+        setRefreshing(false);
+        setRefreshKey(k => k + 1);
+      }, 180_000);
     } catch (e: any) {
-      console.error('[Refresh] Caught exception:', e);
       setWebhookError('Could not reach Edge Function — check Supabase project status');
       setRefreshing(false);
-      return;
     }
-
-    console.log('[Refresh] Done — incrementing refreshKey');
-    setRefreshKey(k => k + 1);
-    setRefreshing(false);
   };
 
   return (
@@ -102,7 +104,7 @@ function Dashboard() {
             style={{ background: 'linear-gradient(135deg, #2563EB 0%, #38BDF8 100%)' }}
           >
             <RefreshCw className={cn("w-3.5 h-3.5", refreshing && "animate-spin")} />
-            <span className="hidden sm:block">{refreshing ? 'Refreshing...' : 'Refresh Feed'}</span>
+            <span className="hidden sm:block">{refreshing ? 'Scraping jobs...' : 'Refresh Feed'}</span>
           </button>
         </div>
       </nav>
@@ -119,7 +121,7 @@ function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto min-h-[calc(100vh-73px)]">
-        {activeTab === 'feed' ? <Feed refreshKey={refreshKey} /> : <SettingsPanel />}
+        {activeTab === 'feed' ? <Feed refreshKey={refreshKey} onJobsArrived={onJobsArrived} /> : <SettingsPanel />}
       </main>
 
     </div>

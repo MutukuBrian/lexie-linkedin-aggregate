@@ -7,43 +7,101 @@ const CORS_HEADERS = {
 }
 
 const APIFY_URL =
-  'https://api.apify.com/v2/acts/harvestapi~linkedin-post-search/run-sync-get-dataset-items'
+  'https://api.apify.com/v2/acts/worldunboxer~rapid-linkedin-scraper/run-sync-get-dataset-items'
 
-function buildApifyBody(keyword: string, config: Record<string, any>) {
+function buildApifyBody(jobTitle: string, config: Record<string, any>) {
   const body: Record<string, unknown> = {
-    searchQueries: [keyword],
-    maxPosts: config.max_posts || 20,
-    postedLimit: config.posted_limit || 'any',
-    sortBy: config.sort_by || 'date',
-    contentType: config.content_type || 'all',
-    scrapeReactions: Boolean(config.scrape_reactions),
-    postNestedReactions: false,
-    scrapeComments: Boolean(config.scrape_comments),
-    postNestedComments: false,
+    job_title: jobTitle,
   }
 
-  if (config.scrape_reactions) body.maxReactions = config.max_reactions || 5
-  if (config.scrape_comments)  body.maxComments  = config.max_comments  || 10
-  if (config.posted_limit_date) body.postedLimitDate = config.posted_limit_date
+  // Only include optional fields when they have a non-empty value
+  if (config.location)         body.location         = config.location
+  if (config.jobs_entries > 0) body.jobs_entries      = config.jobs_entries
+  if (config.start_jobs > 0)   body.start_jobs        = config.start_jobs
+  if (config.experience_level) body.experience_level  = config.experience_level
+  if (config.job_type)         body.job_type          = config.job_type
+  if (config.work_schedule)    body.work_schedule     = config.work_schedule
+  if (config.job_post_time)    body.job_post_time     = config.job_post_time
 
-  const csv = (val: string | null) =>
-    val ? val.split(',').map((s: string) => s.trim()).filter(Boolean) : undefined
-
-  const authorUrls        = csv(config.author_urls)
-  const authorCompanies   = csv(config.authors_companies)
-  const mentioningMember  = csv(config.mentioning_member)
-  const mentioningCompany = csv(config.mentioning_company)
-  const industryId        = csv(config.authors_industry_id)
-  const authorKeywords    = csv(config.author_keywords)
-
-  if (authorUrls?.length)        body.authorUrls        = authorUrls
-  if (authorCompanies?.length)   body.authorCompanies   = authorCompanies
-  if (mentioningMember?.length)  body.mentioningMember  = mentioningMember
-  if (mentioningCompany?.length) body.mentioningCompany = mentioningCompany
-  if (industryId?.length)        body.authorsIndustryId = industryId
-  if (authorKeywords?.length)    body.authorKeywords    = authorKeywords
+  const companies = config.company_names
+    ? config.company_names.split(',').map((s: string) => s.trim()).filter(Boolean)
+    : []
+  if (companies.length) body.company_names = companies
 
   return body
+}
+
+async function scrapeKeyword(
+  keyword: string,
+  config: Record<string, any>,
+  supabase: ReturnType<typeof createClient>
+) {
+  const body = buildApifyBody(keyword, config)
+  console.log(`[linkedin-refresh] → Apify body for "${keyword}":`, JSON.stringify(body))
+
+  // 90 s per keyword — keeps us safely under the 300 s EdgeRuntime.waitUntil ceiling
+  // even with 3 keywords running sequentially (3 × 90 = 270 s max)
+  const res = await fetch(`${APIFY_URL}?token=${config.apify_token}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(90_000),
+  })
+
+  console.log(`[linkedin-refresh] Apify status ${res.status} for "${keyword}"`)
+
+  if (!res.ok) {
+    const errText = await res.text()
+    console.error(`[linkedin-refresh] Apify error body:`, errText)
+    return
+  }
+
+  const rawJson = await res.text()
+  console.log(`[linkedin-refresh] Apify raw response (first 300 chars):`, rawJson.slice(0, 300))
+
+  let jobs: any[]
+  try {
+    const parsed = JSON.parse(rawJson)
+    // The endpoint returns an array directly, but guard against unexpected shape
+    jobs = Array.isArray(parsed) ? parsed : (parsed?.items ?? parsed?.data ?? [])
+  } catch (e) {
+    console.error(`[linkedin-refresh] Failed to parse Apify response:`, e)
+    return
+  }
+
+  console.log(`[linkedin-refresh] Parsed ${jobs.length} jobs for "${keyword}"`)
+  if (jobs.length === 0) return
+
+  const rows = jobs.map((j: any) => ({
+    job_id:            String(j.job_id),
+    job_url:           j.job_url           ?? null,
+    job_title:         j.job_title         ?? null,
+    company_name:      j.company_name      ?? null,
+    company_url:       j.company_url       ?? null,
+    company_logo_url:  j.company_logo_url  ?? null,
+    location:          j.location          ?? null,
+    time_posted:       j.time_posted       ?? null,
+    num_applicants:    j.num_applicants    ?? null,
+    salary_range:      j.salary_range      ?? null,
+    job_description:   j.job_description   ?? null,
+    seniority_level:   j.seniority_level   ?? null,
+    employment_type:   j.employment_type   ?? null,
+    job_function:      j.job_function      ?? null,
+    industries:        j.industries        ?? null,
+    easy_apply:        Boolean(j.easy_apply),
+    apply_url:         j.apply_url         ?? null,
+    updated_at:        new Date().toISOString(),
+  }))
+
+  const { error: upsertErr } = await supabase
+    .from('linkedin_jobs_lexiecoon')
+    .upsert(rows, { onConflict: 'job_id' })
+
+  if (upsertErr) {
+    console.error(`[linkedin-refresh] Upsert error for "${keyword}":`, upsertErr.message)
+  } else {
+    console.log(`[linkedin-refresh] Upserted ${rows.length} jobs for "${keyword}"`)
+  }
 }
 
 async function runScrape(supabaseUrl: string, serviceKey: string) {
@@ -59,62 +117,36 @@ async function runScrape(supabaseUrl: string, serviceKey: string) {
     .single()
 
   if (cfgErr || !config) {
-    console.error('[linkedin-refresh] Config error:', cfgErr)
+    console.error('[linkedin-refresh] Config fetch error:', cfgErr?.message ?? 'no row returned')
     return
   }
+  console.log('[linkedin-refresh] Config loaded. has_token:', Boolean(config.apify_token))
 
   const { data: kwRows, error: kwErr } = await supabase
     .from('search_keywords_lexiecoon')
     .select('keyword')
     .eq('is_active', true)
 
-  if (kwErr || !kwRows?.length) {
-    console.error('[linkedin-refresh] Keywords error:', kwErr)
+  if (kwErr) {
+    console.error('[linkedin-refresh] Keywords fetch error:', kwErr.message)
     return
   }
+  if (!kwRows?.length) {
+    console.warn('[linkedin-refresh] No active keywords — nothing to scrape')
+    return
+  }
+  console.log(`[linkedin-refresh] ${kwRows.length} active keywords:`, kwRows.map((r: { keyword: string }) => r.keyword))
 
   for (const { keyword } of kwRows) {
-    console.log(`[linkedin-refresh] Keyword: "${keyword}"`)
     try {
-      const res = await fetch(`${APIFY_URL}?token=${config.apify_token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildApifyBody(keyword, config)),
-        signal: AbortSignal.timeout(310_000),
-      })
-
-      if (!res.ok) {
-        console.error(`[linkedin-refresh] Apify ${res.status} for "${keyword}"`)
-        continue
+      await scrapeKeyword(keyword, config, supabase)
+    } catch (err: any) {
+      // Catch AbortError (timeout) separately so we can log clearly
+      if (err?.name === 'AbortError' || err?.name === 'TimeoutError') {
+        console.error(`[linkedin-refresh] Timeout waiting for Apify response for "${keyword}"`)
+      } else {
+        console.error(`[linkedin-refresh] Unexpected error for "${keyword}":`, err?.message ?? err)
       }
-
-      const posts: any[] = await res.json()
-      if (!posts.length) continue
-
-      const rows = posts.map((p) => ({
-        id:           p.id,
-        poster_name:  p.author?.name         ?? null,
-        poster_url:   p.author?.linkedinUrl  ?? null,
-        post_content: p.content              ?? null,
-        post_url:     p.linkedinUrl          ?? null,
-        created_at:   p.postedAt?.date       ?? null,
-        author_info:  p.author?.info         ?? null,
-        avatar:       p.author?.avatar       ?? null,
-        post_images:  p.postImages           ?? null,
-        engagement:   p.engagement           ?? null,
-        website:      p.author?.website      ?? null,
-        website_label:p.author?.websiteLabel ?? null,
-      }))
-
-      // Atomic upsert — replaces n8n's manual check-then-insert/update pattern
-      const { error: upsertErr } = await supabase
-        .from('linkedin_posts_lexiecoon')
-        .upsert(rows, { onConflict: 'id' })
-
-      if (upsertErr) console.error(`[linkedin-refresh] Upsert error:`, upsertErr.message)
-      else           console.log(`[linkedin-refresh] Upserted ${rows.length} posts for "${keyword}"`)
-    } catch (err) {
-      console.error(`[linkedin-refresh] Error for "${keyword}":`, err)
     }
   }
 
@@ -139,9 +171,6 @@ Deno.serve(async (req: Request) => {
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     })
 
-  // Returns 202 immediately; scraping runs in background via EdgeRuntime.waitUntil.
-  // The app's existing Realtime subscription on linkedin_posts_lexiecoon delivers
-  // new posts to the feed automatically as they are upserted.
   EdgeRuntime.waitUntil(runScrape(supabaseUrl, serviceRoleKey))
 
   return new Response(

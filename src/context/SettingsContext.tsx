@@ -8,23 +8,14 @@ interface Settings {
   locationTerms: string[];
   excludeTerms: string[];
   scraper: {
-    maxPosts: number;
-    postedLimit: string;
-    postedLimitDate: string;
-    sortBy: string;
-    contentType: string;
-    authorUrls: string[];
-    authorsCompanies: string[];
-    mentioningMember: string[];
-    mentioningCompany: string[];
-    authorsIndustryId: string[];
-    startPage: number;
-    scrapePages: number;
-    authorKeywords: string[];
-    scrapeReactions: boolean;
-    maxReactions: number;
-    scrapeComments: boolean;
-    maxComments: number;
+    location: string;
+    jobsEntries: number;
+    companyNames: string[];
+    experienceLevel: string;   // '' | '1'..'6'
+    jobType: string;           // '' | 'F' | 'P' | 'C' | 'T' | 'V' | 'I' | 'O'
+    workSchedule: string;      // '' | '1' | '2' | '3'
+    jobPostTime: string;       // '' | 'r86400' | 'r604800' | 'r2592000'
+    startJobs: number;
     apifyToken: string;
     scheduleHour1: number;
     scheduleHour2: number;
@@ -43,28 +34,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [settings, setSettings] = useState<Settings>({
     supabaseUrl: '',
     supabaseAnonKey: '',
-    claudePrompt: "Please analyze this LinkedIn post and create a good cover letter for me based on my CV.",
+    claudePrompt: "Please analyze this LinkedIn job posting and create a tailored cover letter for me based on my CV.",
     keywords: [],
     locationTerms: [],
     excludeTerms: [],
     scraper: {
-      maxPosts: 10,
-      postedLimit: 'week',
-      postedLimitDate: '',
-      sortBy: 'date',
-      contentType: 'all',
-      authorUrls: [],
-      authorsCompanies: [],
-      mentioningMember: [],
-      mentioningCompany: [],
-      authorsIndustryId: [],
-      startPage: 1,
-      scrapePages: 1,
-      authorKeywords: [],
-      scrapeReactions: false,
-      maxReactions: 5,
-      scrapeComments: false,
-      maxComments: 10,
+      location: '',
+      jobsEntries: 100,
+      companyNames: [],
+      experienceLevel: '',
+      jobType: '',
+      workSchedule: '',
+      jobPostTime: '',
+      startJobs: 0,
       apifyToken: '',
       scheduleHour1: 12,
       scheduleHour2: 16,
@@ -76,14 +58,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        
-        // Handle migration: if scraper.authorKeywords is a string, convert it to array
-        if (parsed.scraper && typeof parsed.scraper.authorKeywords === 'string') {
-          parsed.scraper.authorKeywords = parsed.scraper.authorKeywords
-            .split(',')
-            .map((k: string) => k.trim())
-            .filter(Boolean);
-        }
 
         setSettings(prev => ({
           ...prev,

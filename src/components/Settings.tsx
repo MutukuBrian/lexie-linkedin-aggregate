@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { Settings as SettingsIcon, Save, Info, Database, Tag, Plus, X, Cpu, Key, Layers, Filter as FilterIcon, ChevronDown, ChevronUp, Bot, Clock, BookOpen } from 'lucide-react';
+import { Save, Info, Database, Tag, Plus, X, Cpu, Key, Layers, Filter as FilterIcon, Bot, Clock, BookOpen } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getSupabase } from '../lib/supabase';
 
@@ -179,24 +179,15 @@ export const SettingsPanel: React.FC = () => {
           updates.locationTerms = parseTerms(scraperResponse.data.location_terms);
           updates.excludeTerms  = parseTerms(scraperResponse.data.exclude_terms);
           updates.scraper = {
-            maxPosts: scraperResponse.data.max_posts,
-            postedLimit: scraperResponse.data.posted_limit,
-            postedLimitDate: scraperResponse.data.posted_limit_date || '',
-            sortBy: scraperResponse.data.sort_by,
-            contentType: scraperResponse.data.content_type,
-            authorUrls: scraperResponse.data.author_urls ? scraperResponse.data.author_urls.split(',').filter(Boolean) : [],
-            authorsCompanies: scraperResponse.data.authors_companies ? scraperResponse.data.authors_companies.split(',').filter(Boolean) : [],
-            mentioningMember: scraperResponse.data.mentioning_member ? scraperResponse.data.mentioning_member.split(',').filter(Boolean) : [],
-            mentioningCompany: scraperResponse.data.mentioning_company ? scraperResponse.data.mentioning_company.split(',').filter(Boolean) : [],
-            authorsIndustryId: scraperResponse.data.authors_industry_id ? scraperResponse.data.authors_industry_id.split(',').filter(Boolean) : [],
-            startPage: scraperResponse.data.start_page ?? 1,
-            scrapePages: scraperResponse.data.scrape_pages,
-            authorKeywords: scraperResponse.data.author_keywords ? (scraperResponse.data.author_keywords as string).split(',').map(k => k.trim()).filter(Boolean) : [],
-            scrapeReactions: scraperResponse.data.scrape_reactions,
-            maxReactions: scraperResponse.data.max_reactions ?? 5,
-            scrapeComments: scraperResponse.data.scrape_comments,
-            maxComments: scraperResponse.data.max_comments ?? 10,
-            apifyToken: scraperResponse.data.apify_token,
+            location: scraperResponse.data.location || '',
+            jobsEntries: scraperResponse.data.jobs_entries ?? 100,
+            companyNames: scraperResponse.data.company_names ? scraperResponse.data.company_names.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+            experienceLevel: scraperResponse.data.experience_level || '',
+            jobType: scraperResponse.data.job_type || '',
+            workSchedule: scraperResponse.data.work_schedule || '',
+            jobPostTime: scraperResponse.data.job_post_time || '',
+            startJobs: scraperResponse.data.start_jobs ?? 0,
+            apifyToken: scraperResponse.data.apify_token || '',
             scheduleHour1: utcToLocal(scraperResponse.data.schedule_hour_1 ?? 12),
             scheduleHour2: utcToLocal(scraperResponse.data.schedule_hour_2 ?? 16),
           };
@@ -220,11 +211,11 @@ export const SettingsPanel: React.FC = () => {
       const supabase = getSupabase(formData.supabaseUrl, formData.supabaseAnonKey);
       if (!supabase) throw new Error('Invalid credentials');
       
-      const { error } = await supabase.from('linkedin_posts_lexiecoon').select('id').limit(1);
-      
+      const { error } = await supabase.from('linkedin_jobs_lexiecoon').select('job_id').limit(1);
+
       if (error) {
         if (error.code === '42P01') {
-           throw new Error('Connected to Supabase, but "linkedin_posts_lexiecoon" table not found. Please run the SQL setup.');
+           throw new Error('Connected to Supabase, but "linkedin_jobs_lexiecoon" table not found. Please run the SQL setup.');
         }
         throw error;
       }
@@ -255,23 +246,14 @@ export const SettingsPanel: React.FC = () => {
             is_active: true,
             location_terms: JSON.stringify(formData.locationTerms),
             exclude_terms: JSON.stringify(formData.excludeTerms),
-            max_posts: formData.scraper.maxPosts,
-            posted_limit: formData.scraper.postedLimit,
-            posted_limit_date: formData.scraper.postedLimitDate,
-            sort_by: formData.scraper.sortBy,
-            content_type: formData.scraper.contentType,
-            author_urls: formData.scraper.authorUrls.join(','),
-            authors_companies: formData.scraper.authorsCompanies.join(','),
-            mentioning_member: formData.scraper.mentioningMember.join(','),
-            mentioning_company: formData.scraper.mentioningCompany.join(','),
-            authors_industry_id: formData.scraper.authorsIndustryId.join(','),
-            start_page: formData.scraper.startPage,
-            scrape_pages: formData.scraper.scrapePages,
-            author_keywords: formData.scraper.authorKeywords.join(','),
-            scrape_reactions: formData.scraper.scrapeReactions,
-            max_reactions: formData.scraper.maxReactions,
-            scrape_comments: formData.scraper.scrapeComments,
-            max_comments: formData.scraper.maxComments,
+            location: formData.scraper.location,
+            jobs_entries: formData.scraper.jobsEntries,
+            company_names: formData.scraper.companyNames.join(','),
+            experience_level: formData.scraper.experienceLevel,
+            job_type: formData.scraper.jobType,
+            work_schedule: formData.scraper.workSchedule,
+            job_post_time: formData.scraper.jobPostTime,
+            start_jobs: formData.scraper.startJobs,
             apify_token: formData.scraper.apifyToken,
             schedule_hour_1: localToUtc(formData.scraper.scheduleHour1),
             schedule_hour_2: localToUtc(formData.scraper.scheduleHour2),
@@ -323,23 +305,14 @@ export const SettingsPanel: React.FC = () => {
           is_active: true,
           location_terms: JSON.stringify(formData.locationTerms),
           exclude_terms: JSON.stringify(formData.excludeTerms),
-          max_posts: updatedScraper.maxPosts,
-          posted_limit: updatedScraper.postedLimit,
-          posted_limit_date: updatedScraper.postedLimitDate,
-          sort_by: updatedScraper.sortBy,
-          content_type: updatedScraper.contentType,
-          author_urls: updatedScraper.authorUrls.join(','),
-          authors_companies: updatedScraper.authorsCompanies.join(','),
-          mentioning_member: updatedScraper.mentioningMember.join(','),
-          mentioning_company: updatedScraper.mentioningCompany.join(','),
-          authors_industry_id: updatedScraper.authorsIndustryId.join(','),
-          start_page: updatedScraper.startPage,
-          scrape_pages: updatedScraper.scrapePages,
-          author_keywords: updatedScraper.authorKeywords.join(','),
-          scrape_reactions: updatedScraper.scrapeReactions,
-          max_reactions: updatedScraper.maxReactions,
-          scrape_comments: updatedScraper.scrapeComments,
-          max_comments: updatedScraper.maxComments,
+          location: updatedScraper.location,
+          jobs_entries: updatedScraper.jobsEntries,
+          company_names: updatedScraper.companyNames.join(','),
+          experience_level: updatedScraper.experienceLevel,
+          job_type: updatedScraper.jobType,
+          work_schedule: updatedScraper.workSchedule,
+          job_post_time: updatedScraper.jobPostTime,
+          start_jobs: updatedScraper.startJobs,
           apify_token: updatedScraper.apifyToken,
           schedule_hour_1: localToUtc(updatedScraper.scheduleHour1),
           schedule_hour_2: localToUtc(updatedScraper.scheduleHour2),
@@ -439,12 +412,12 @@ export const SettingsPanel: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-medium text-zinc-700">
             <Tag className="w-4 h-4" />
-            Search queries
+            Job title searches
           </div>
           <div className="p-6 border border-zinc-200 rounded-2xl bg-white shadow-sm space-y-4">
             <TagInput
-              label="Queries"
-              description="Queries to search LinkedIn posts. The same query as you would use in the LinkedIn search bar."
+              label="Job titles"
+              description="Job titles to search LinkedIn jobs for. Each title triggers one scrape run against the global Location and filters configured below."
               value={formData.keywords}
               onChange={(kw) => setFormData({ ...formData, keywords: kw })}
               onRemove={async (kw) => {
@@ -452,7 +425,7 @@ export const SettingsPanel: React.FC = () => {
                 const supabase = getSupabase(formData.supabaseUrl, formData.supabaseAnonKey);
                 if (supabase) await supabase.from('search_keywords_lexiecoon').delete().eq('keyword', kw);
               }}
-              placeholder="e.g. Freelance Producer (Press Enter)"
+              placeholder="e.g. Creative Project Manager (Press Enter)"
             />
             <p className="text-[10px] text-zinc-400 italic flex items-center gap-1">
               <Info className="w-3 h-3" />
@@ -475,117 +448,130 @@ export const SettingsPanel: React.FC = () => {
                 Core Parameters
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 md:col-span-2">
                   <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
-                    Max posts per query
-                    <Tooltip content="Maximum number of posts to scrape per each search query. If you set this to 0, it will scrape all posts.">
-                      <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
-                    </Tooltip>
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                    value={formData.scraper.maxPosts}
-                    onChange={(e) => updateScraper({ maxPosts: parseInt(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
-                    Time filter
-                    <Tooltip content="Fetch posts no older than X time. Options: '1h', '24h', 'week', 'month'.">
-                      <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
-                    </Tooltip>
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                    value={formData.scraper.postedLimit}
-                    onChange={(e) => updateScraper({ postedLimit: e.target.value })}
-                  >
-                    <option value="any">Any Time</option>
-                    <option value="1h">Last Hour</option>
-                    <option value="24h">Last 24 Hours</option>
-                    <option value="week">Past Week</option>
-                    <option value="month">Past Month</option>
-                    <option value="3months">Past 3 Months</option>
-                    <option value="6months">Past 6 Months</option>
-                    <option value="year">Past Year</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
-                    Custom date limit (optional)
-                    <Tooltip content="Scrape posts from now up to and including this date. It supports the Date time string format (e.g., 2024-01-01).">
+                    Location
+                    <Tooltip content="Location to search jobs in. Applied to every job title above. Example: 'Brooklyn, NY' or 'Remote, United States'.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
                   </label>
                   <input
                     type="text"
-                    placeholder="YYYY-MM-DD"
+                    placeholder="e.g. Brooklyn, NY"
                     className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                    value={formData.scraper.postedLimitDate}
-                    onChange={(e) => updateScraper({ postedLimitDate: e.target.value })}
+                    value={formData.scraper.location}
+                    onChange={(e) => updateScraper({ location: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
-                    Sort by
-                    <Tooltip content="Sort by 'relevance' or 'date'.">
+                    Number of jobs per query
+                    <Tooltip content="Maximum number of jobs to scrape per job title. Minimum 1, maximum 10000. Default is 100.">
+                      <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
+                    </Tooltip>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10000}
+                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                    value={formData.scraper.jobsEntries}
+                    onChange={(e) => updateScraper({ jobsEntries: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Search after how many jobs
+                    <Tooltip content="Skip this many jobs before starting the scrape. Useful for paginating past results already in the database.">
+                      <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
+                    </Tooltip>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                    value={formData.scraper.startJobs}
+                    onChange={(e) => updateScraper({ startJobs: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Experience level
+                    <Tooltip content="Filter jobs by experience level required.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
                   </label>
                   <select
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                    value={formData.scraper.sortBy}
-                    onChange={(e) => updateScraper({ sortBy: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 bg-white"
+                    value={formData.scraper.experienceLevel}
+                    onChange={(e) => updateScraper({ experienceLevel: e.target.value })}
                   >
-                    <option value="date">Most Recent</option>
-                    <option value="relevance">Relevance</option>
+                    <option value="">Any</option>
+                    <option value="1">Internship</option>
+                    <option value="2">Entry level</option>
+                    <option value="3">Associate</option>
+                    <option value="4">Mid-Senior level</option>
+                    <option value="5">Director</option>
+                    <option value="6">Executive</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
-                    Content type
-                    <Tooltip content="Filter posts by content type. For example, if you choose 'Videos', it will scrape only posts containing videos.">
+                    Job type
+                    <Tooltip content="Filter jobs by employment type.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
                   </label>
                   <select
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                    value={formData.scraper.contentType}
-                    onChange={(e) => updateScraper({ contentType: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 bg-white"
+                    value={formData.scraper.jobType}
+                    onChange={(e) => updateScraper({ jobType: e.target.value })}
                   >
-                    <option value="all">All Content</option>
-                    <option value="jobs">Jobs</option>
-                    <option value="images">Images</option>
-                    <option value="videos">Videos</option>
-                    <option value="live_videos">Live Videos</option>
-                    <option value="documents">Documents</option>
-                    <option value="collaborative_articles">Collaborative Articles</option>
+                    <option value="">Any</option>
+                    <option value="F">Full-time</option>
+                    <option value="P">Part-time</option>
+                    <option value="C">Contract</option>
+                    <option value="T">Temporary</option>
+                    <option value="V">Volunteer</option>
+                    <option value="I">Internship</option>
+                    <option value="O">Other</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
-                    Pagination strategy
-                    <Tooltip content="Choose the page number to start from and the number of pages to scrape. Each page contains 100 posts.">
+                    Work schedule
+                    <Tooltip content="Filter jobs by on-site / remote / hybrid arrangement.">
                       <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                     </Tooltip>
                   </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      placeholder="Start"
-                      className="w-1/2 px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                      value={formData.scraper.startPage}
-                      onChange={(e) => updateScraper({ startPage: parseInt(e.target.value) })}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Pages"
-                      className="w-1/2 px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                      value={formData.scraper.scrapePages}
-                      onChange={(e) => updateScraper({ scrapePages: parseInt(e.target.value) })}
-                    />
-                  </div>
+                  <select
+                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 bg-white"
+                    value={formData.scraper.workSchedule}
+                    onChange={(e) => updateScraper({ workSchedule: e.target.value })}
+                  >
+                    <option value="">Any</option>
+                    <option value="1">On-site</option>
+                    <option value="2">Remote</option>
+                    <option value="3">Hybrid</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-2">
+                    Job posting time
+                    <Tooltip content="Only return jobs posted within this window.">
+                      <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
+                    </Tooltip>
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 bg-white"
+                    value={formData.scraper.jobPostTime}
+                    onChange={(e) => updateScraper({ jobPostTime: e.target.value })}
+                  >
+                    <option value="">Any time</option>
+                    <option value="r86400">Past 24 hours</option>
+                    <option value="r604800">Past week</option>
+                    <option value="r2592000">Past month</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -596,133 +582,21 @@ export const SettingsPanel: React.FC = () => {
                 <FilterIcon className="w-3.5 h-3.5" />
                 Targeting & Filters
               </h3>
-              
-              <div className="grid gap-6">
-                <TagInput 
-                  label="Author keywords"
-                  description="Scrape posts of profile-authors whose profiles contain at least one of these keywords in the headline or job title sections."
-                  value={formData.scraper.authorKeywords}
-                  onChange={(val) => updateScraper({ authorKeywords: val })}
-                  placeholder="e.g. Hiring, Recruiter, CTO"
-                />
 
-                <TagInput 
-                  label="Profile or company URLs"
-                  description="List of LinkedIn profile or company URLs to scrape. Example: https://www.linkedin.com/in/williamhgates will fetch posted or re-posted content by Bill Gates."
-                  value={formData.scraper.authorUrls}
-                  onChange={(val) => updateScraper({ authorUrls: val })}
-                  placeholder="e.g. https://www.linkedin.com/in/..."
-                />
-
-                <TagInput 
-                  label="Authors industry IDs"
-                  description="Scrape posts of profile-authors who assigned to LinkedIn Industry IDs of these industries. Full list: https://github.com/HarvestAPI/linkedin-industry-codes-v2/blob/main/linkedin_industry_code_v2_all_eng.csv"
-                  value={formData.scraper.authorsIndustryId}
-                  onChange={(val) => updateScraper({ authorsIndustryId: val })}
-                  placeholder="e.g. 96 (IT Services)"
-                />
-
-                <TagInput 
-                  label="Mentioning members"
-                  description="List of LinkedIn profile URLs of members mentioned in posts. Example: https://www.linkedin.com/in/williamhgates will fetch posts mentioning Bill Gates."
-                  value={formData.scraper.mentioningMember}
-                  onChange={(val) => updateScraper({ mentioningMember: val })}
-                  placeholder="e.g. https://www.linkedin.com/in/member-name"
-                />
-
-                <TagInput 
-                  label="Mentioning companies" 
-                  description="List of LinkedIn Company Names mentioned in posts. Example: https://www.linkedin.com/company/google will fetch posts mentioning Google."
-                  value={formData.scraper.mentioningCompany}
-                  onChange={(val) => updateScraper({ mentioningCompany: val })}
-                  placeholder="e.g. https://www.linkedin.com/company/google"
-                />
-              </div>
-            </div>
-
-            {/* Detailed Scraping */}
-            <div className="space-y-4 pt-4 border-t border-zinc-100">
-              <h3 className="text-[11px] font-bold text-zinc-900 flex items-center gap-2 mb-2">
-                <SettingsIcon className="w-3.5 h-3.5" />
-                Extended Data Collection
-              </h3>
-              
-              <div className="grid gap-4">
-                <div className="p-4 bg-zinc-50 rounded-xl space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500"
-                        checked={formData.scraper.scrapeReactions}
-                        onChange={(e) => updateScraper({ scrapeReactions: e.target.checked })}
-                      />
-                      <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900 transition-colors tracking-tight flex items-center gap-2">
-                        Scrape Reactions
-                        <Tooltip content="Enabling this will fetch authors and basic details of people who reacted to the posts.">
-                          <Info className="w-3 h-3 text-zinc-300 cursor-help" />
-                        </Tooltip>
-                      </span>
-                    </label>
-                    {formData.scraper.scrapeReactions && (
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-1">
-                          Max per post
-                          <Tooltip content="Maximum number of reactions to scrape per post. Default is 5.">
-                            <Info className="w-2.5 h-2.5 text-zinc-300 cursor-help" />
-                          </Tooltip>
-                        </label>
-                        <input
-                          type="number"
-                          className="w-16 px-2 py-1 text-xs border border-zinc-200 rounded focus:outline-none"
-                          value={formData.scraper.maxReactions}
-                          onChange={(e) => updateScraper({ maxReactions: parseInt(e.target.value) })}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500"
-                        checked={formData.scraper.scrapeComments}
-                        onChange={(e) => updateScraper({ scrapeComments: e.target.checked })}
-                      />
-                      <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900 transition-colors tracking-tight flex items-center gap-2">
-                        Scrape Comments
-                        <Tooltip content="Enabling this will fetch comment text and author details for each post.">
-                          <Info className="w-3 h-3 text-zinc-300 cursor-help" />
-                        </Tooltip>
-                      </span>
-                    </label>
-                    {formData.scraper.scrapeComments && (
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-1">
-                          Max per post
-                          <Tooltip content="Maximum number of comments to scrape per post.">
-                            <Info className="w-2.5 h-2.5 text-zinc-300 cursor-help" />
-                          </Tooltip>
-                        </label>
-                        <input
-                          type="number"
-                          className="w-16 px-2 py-1 text-xs border border-zinc-200 rounded focus:outline-none"
-                          value={formData.scraper.maxComments}
-                          onChange={(e) => updateScraper({ maxComments: parseInt(e.target.value) })}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <TagInput
+                label="Company names"
+                description="Only return jobs from these companies. Leave empty to search across all companies."
+                value={formData.scraper.companyNames}
+                onChange={(val) => updateScraper({ companyNames: val })}
+                placeholder="e.g. Solomon Page"
+              />
             </div>
 
             <div className="pt-4 space-y-1.5 border-t border-zinc-100">
               <div className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400">
                 <Key className="w-3 h-3" />
                 Apify API token
-                <Tooltip content="Your Apify platform personal API token, used to run the LinkedIn Scraper Actor.">
+                <Tooltip content="Your Apify platform personal API token, used to run the LinkedIn Jobs Scraper Actor.">
                   <Info className="w-3 h-3 text-zinc-300 cursor-help hover:text-zinc-500 transition-colors" />
                 </Tooltip>
               </div>
