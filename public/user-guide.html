@@ -398,10 +398,10 @@
   <h2><span class="icon"><i class="fa-solid fa-thumbtack"></i></span> 1. What This Dashboard Does</h2>
 
   <div class="section-intro">
-    The Lexie's LinkedIn Aggregator automatically finds and displays LinkedIn posts from people who are hiring, looking for freelancers, or discussing topics you care about - all in one place, updated twice a day.
+    Lexie's LinkedIn Aggregator automatically finds and displays LinkedIn <strong>job postings</strong> matching the roles you're looking for - all in one place, updated twice a day.
   </div>
 
-  <p>Instead of manually scrolling through LinkedIn every day hoping to catch the right posts, this dashboard does the searching for you. You tell it what kinds of opportunities you're looking for (e.g., <em>"Freelance Video Editor"</em>, <em>"Hiring Producer"</em>), and it automatically collects matching LinkedIn posts and shows them in a clean, easy-to-browse feed.</p>
+  <p>Instead of manually scrolling through LinkedIn Jobs every day hoping to catch the right opening, this dashboard does the searching for you. You tell it what job titles you're looking for (e.g., <em>"Creative Project Manager"</em>, <em>"Digital Producer"</em>), set a location, and it automatically collects matching job listings and shows them in a clean, easy-to-browse feed.</p>
 
   <div class="card-grid">
     <div class="card">
@@ -412,7 +412,7 @@
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-layer-group"></i></div>
       <h4>Organised Feed</h4>
-      <p>All matching posts stored in one searchable feed, sorted by date.</p>
+      <p>All matching jobs stored in one searchable feed, sorted by date.</p>
     </div>
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-clock"></i></div>
@@ -422,17 +422,17 @@
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-clipboard-list"></i></div>
       <h4>One-Click Outreach</h4>
-      <p>Copy any post with your custom message template attached - ready to paste into Claude or ChatGPT.</p>
+      <p>Copy any job posting with your custom prompt attached - ready to paste into Claude or ChatGPT for a tailored cover letter.</p>
     </div>
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-filter"></i></div>
       <h4>Smart Filtering</h4>
-      <p>Filter by location, date range, or keywords to find the most relevant posts quickly.</p>
+      <p>Filter by location, date range, or keywords to find the most relevant jobs quickly.</p>
     </div>
     <div class="card">
-      <div class="card-icon"><i class="fa-solid fa-chart-simple"></i></div>
-      <h4>Engagement Data</h4>
-      <p>See likes, comments, and shares at a glance to spot the most active opportunities.</p>
+      <div class="card-icon"><i class="fa-solid fa-dollar-sign"></i></div>
+      <h4>Job Details at a Glance</h4>
+      <p>See salary range, employment type, experience level, and application URL right on the card.</p>
     </div>
   </div>
 
@@ -440,7 +440,7 @@
     <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
     <div class="callout-content">
       <strong>How it works in plain English</strong>
-      Behind the scenes, the dashboard uses a service called Apify to scrape (collect) public LinkedIn posts matching your search terms. Those posts are saved to a secure private database (Supabase), and the dashboard displays them in real time. Your credentials are stored only in your browser - nothing is shared with third parties.
+      Behind the scenes, the dashboard uses a service called Apify to scrape (collect) public LinkedIn job postings matching your search terms. Those jobs are saved to a secure private database (Supabase), and the dashboard displays them in real time. Your credentials are stored only in your browser - nothing is shared with third parties.
     </div>
   </div>
 
@@ -466,13 +466,13 @@
       <tbody>
         <tr>
           <td><strong>Supabase</strong></td>
-          <td>Your private database that stores all the LinkedIn posts the dashboard collects</td>
+          <td>Your private database that stores all the LinkedIn jobs the dashboard collects</td>
           <td>Free tier</td>
           <td>supabase.com</td>
         </tr>
         <tr>
           <td><strong>Apify</strong></td>
-          <td>The service that automatically collects (scrapes) LinkedIn posts matching your search terms</td>
+          <td>The service that automatically collects (scrapes) LinkedIn job listings matching your search terms</td>
           <td>Free starter plan</td>
           <td>apify.com</td>
         </tr>
@@ -484,7 +484,7 @@
     <span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
     <div class="callout-content">
       <strong>Apify usage note</strong>
-      Apify's free plan includes a limited monthly scraping budget. For regular use (twice-daily scrapes with up to 10 posts each), the free tier is typically sufficient. If you need more posts or higher frequency, a paid plan starts at around $49/month.
+      Apify's free plan includes a limited monthly scraping budget. For regular use (twice-daily scrapes with around 100 jobs per title), the free tier is typically sufficient. If you need higher volume or frequency, a paid plan starts at around $49/month.
     </div>
   </div>
 
@@ -596,8 +596,8 @@
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
-        <h4>Add your search keywords</h4>
-        <p>In the <strong>Search Queries</strong> section, type a keyword and press <kbd>Enter</kbd> to add it. Repeat for each search term you want the dashboard to monitor (e.g., <em>Freelance Video Editor</em>, <em>Hiring Producer</em>).</p>
+        <h4>Add your job titles</h4>
+        <p>In the <strong>Job title searches</strong> section, type a job title and press <kbd>Enter</kbd> to add it. Repeat for each role you want the dashboard to monitor (e.g., <em>Creative Project Manager</em>, <em>Digital Producer</em>). Then, in <strong>Scraper Settings</strong>, set the <strong>Location</strong> (e.g., <em>Brooklyn, NY</em>) that applies to every job title.</p>
       </div>
     </div>
 
@@ -613,7 +613,7 @@
       <div class="step-num"></div>
       <div class="step-body">
         <h4>Do your first manual refresh</h4>
-        <p>Click the <strong>Refresh Feed</strong> button in the top navigation bar. Wait 1–3 minutes. Your first batch of LinkedIn posts will appear in the Feed tab automatically.</p>
+        <p>Click the <strong>Refresh Feed</strong> button in the top navigation bar. Wait 1–3 minutes. Your first batch of LinkedIn jobs will appear in the Feed tab automatically.</p>
       </div>
     </div>
   </div>
@@ -622,7 +622,7 @@
     <span class="icon"><i class="fa-solid fa-lightbulb"></i></span>
     <div class="callout-content">
       <strong>Switching browsers or devices?</strong>
-      Your credentials are stored in the browser you used during setup. If you open the dashboard in a different browser (Chrome → Firefox, for example) or on a different device, just repeat Steps C3 and C4 to paste your credentials again - everything else (your posts, keywords, settings) is stored in the database and will be there waiting for you.
+      Your credentials are stored in the browser you used during setup. If you open the dashboard in a different browser (Chrome → Firefox, for example) or on a different device, just repeat Steps C3 and C4 to paste your credentials again - everything else (your jobs, job titles, settings) is stored in the database and will be there waiting for you.
     </div>
   </div>
 
@@ -638,15 +638,15 @@
   <h3>Section 1 - Database Connection</h3>
   <p>This is where you paste your Supabase Project URL and anon public key (covered in Section 3). Click <strong>Verify Schema Connection</strong> to confirm the connection is working - you should see a green success message. If credentials were already entered during handover, this should already show as connected.</p>
 
-  <h3>Section 2 - Search Queries</h3>
-  <p>Enter the keywords you want to search for on LinkedIn. Press <kbd>Enter</kbd> after each keyword to add it as a tag. Examples:</p>
+  <h3>Section 2 - Job Title Searches</h3>
+  <p>Enter the job titles you want to monitor on LinkedIn. Press <kbd>Enter</kbd> after each title to add it as a tag. Examples:</p>
   <ul>
-    <li><em>Freelance Video Editor</em></li>
-    <li><em>Hiring Producer</em></li>
-    <li><em>Looking for Social Media Manager</em></li>
-    <li><em>Content Creator Opportunity</em></li>
+    <li><em>Creative Project Manager</em></li>
+    <li><em>Digital Producer</em></li>
+    <li><em>Content Strategist</em></li>
+    <li><em>Social Media Manager</em></li>
   </ul>
-  <p>Each keyword runs as a separate LinkedIn search - more keywords means more posts, but also uses more of your Apify budget.</p>
+  <p>Each job title runs as a separate LinkedIn Jobs search, using the global Location and filters configured below. More titles means more jobs but uses more of your Apify budget.</p>
 
   <h3>Section 3 - Scraper Settings</h3>
 
@@ -657,65 +657,63 @@
       </thead>
       <tbody>
         <tr>
-          <td><strong>Max Posts</strong></td>
-          <td>How many posts to collect per keyword per run</td>
-          <td>10–25</td>
+          <td><strong>Location</strong></td>
+          <td>The location applied to every job title search (e.g., "Brooklyn, NY", "Remote, United States")</td>
+          <td>Your target market</td>
         </tr>
         <tr>
-          <td><strong>Time Filter</strong></td>
-          <td>Only collect posts from the last Day / Week / Month</td>
-          <td>Week</td>
+          <td><strong>Number of jobs per query</strong></td>
+          <td>How many job postings to collect per job title per run (max 10,000)</td>
+          <td>100</td>
         </tr>
         <tr>
-          <td><strong>Sort By</strong></td>
-          <td>Sort results by Date (newest first) or Relevance</td>
-          <td>Date</td>
+          <td><strong>Search after how many jobs</strong></td>
+          <td>Skip this many results before starting. Useful for paginating past results you've already seen.</td>
+          <td>0</td>
         </tr>
         <tr>
-          <td><strong>Content Type</strong></td>
-          <td>Filter to posts with images, videos, or all content</td>
-          <td>All</td>
+          <td><strong>Experience level</strong></td>
+          <td>Filter to a specific seniority: Internship, Entry level, Associate, Mid-Senior level, Director, Executive, or Any.</td>
+          <td>Any (or pick the level matching your career stage)</td>
         </tr>
         <tr>
-          <td><strong>Scrape Pages</strong></td>
-          <td>How many pages of results to scan (1 page ≈ 10 posts)</td>
-          <td>1–2</td>
+          <td><strong>Job type</strong></td>
+          <td>Filter by employment type: Full-time, Part-time, Contract, Temporary, Volunteer, Internship, Other, or Any.</td>
+          <td>Depends on what you're looking for</td>
+        </tr>
+        <tr>
+          <td><strong>Work schedule</strong></td>
+          <td>On-site, Remote, Hybrid, or Any.</td>
+          <td>Match your preference</td>
+        </tr>
+        <tr>
+          <td><strong>Job posting time</strong></td>
+          <td>Only return jobs posted within a recent window: Past 24 hours, Past week, Past month, or Any time.</td>
+          <td>Past week</td>
+        </tr>
+        <tr>
+          <td><strong>Company names</strong></td>
+          <td>Tag list of companies to narrow the search to (leave empty to search across all companies).</td>
+          <td>Leave blank unless targeting specific employers</td>
         </tr>
         <tr>
           <td><strong>Apify API Token</strong></td>
-          <td>Your secret Apify token from Phase B</td>
+          <td>Your secret Apify token from Step B</td>
           <td>Required</td>
-        </tr>
-        <tr>
-          <td><strong>Author Keywords</strong></td>
-          <td>Only collect posts from authors whose name contains these words</td>
-          <td>Leave blank unless needed</td>
-        </tr>
-        <tr>
-          <td><strong>Author URLs</strong></td>
-          <td>Collect posts only from specific LinkedIn profile URLs</td>
-          <td>Leave blank unless needed</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <h3>Section 4 - Extended Data Collection</h3>
-  <p>These are optional toggles that collect more detail from each post, at the cost of slightly more Apify usage.</p>
-  <ul>
-    <li><strong>Scrape Reactions</strong> - Collects who reacted to the post (👍 ❤️ etc.) and how many. Leave off unless you need this detail.</li>
-    <li><strong>Scrape Comments</strong> - Collects the comments on each post. Useful for understanding context, but increases scraping time.</li>
-  </ul>
-
-  <h3>Section 5 - Auto-Refresh Schedule</h3>
+  <h3>Section 4 - Auto-Refresh Schedule</h3>
   <p>Pick two times per day when you'd like the dashboard to automatically scrape LinkedIn. The times are set in <strong>your local timezone</strong> and automatically converted to the correct format in the database. A good choice is once in the morning (e.g., 9:00 AM) and once in the early afternoon (e.g., 2:00 PM).</p>
 
-  <h3>Section 6 - Claude Prompt</h3>
-  <p>When you click the <strong>Copy</strong> button on any post, this text is prepended to the copied content. Use it to set up a reusable AI prompt for writing outreach messages. For example:</p>
+  <h3>Section 5 - Claude Prompt</h3>
+  <p>When you click the <strong>Copy</strong> button on any job card, this text is prepended to the copied content (which includes the job title, company, location, employment type, salary if available, and the full description). Use it to set up a reusable AI prompt for writing cover letters. For example:</p>
   <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px 20px; margin:12px 0; font-style:italic; font-size:13.5px;">
-    "Based on this LinkedIn post, write a short, personalised outreach message for a freelance video editor reaching out to this person. Keep it under 4 sentences, friendly and professional."
+    "Based on this LinkedIn job posting and my CV, write a tailored cover letter. Highlight the experience that most closely matches the role's requirements. Keep it under one page, professional and warm."
   </div>
-  <p>After copying, you paste the result into Claude (claude.ai) or ChatGPT to get a personalised message instantly.</p>
+  <p>After copying, you paste the result into Claude (claude.ai) or ChatGPT to get a personalised cover letter instantly.</p>
 
   <div class="callout callout-tip">
     <span class="icon"><i class="fa-solid fa-lightbulb"></i></span>
@@ -731,91 +729,102 @@
   <h2 class="page-break"><span class="icon"><i class="fa-solid fa-desktop"></i></span> 5. Using the Dashboard Every Day</h2>
 
   <div class="section-intro">
-    Once set up, your daily workflow is simple: open the dashboard, browse the feed, and copy posts you want to act on. The scraper runs automatically - you don't need to do anything to keep the feed fresh.
+    Once set up, your daily workflow is simple: open the dashboard, browse the feed, and apply to (or save) the jobs that match. The scraper runs automatically - you don't need to do anything to keep the feed fresh.
   </div>
 
   <h3>The Feed Tab</h3>
-  <p>The <strong>Feed</strong> tab (default view) shows all collected LinkedIn posts, newest first. Each post card displays:</p>
+  <p>The <strong>Feed</strong> tab (default view) shows all collected LinkedIn jobs, newest first. Each job card displays:</p>
 
   <div class="table-wrap">
     <table>
       <thead><tr><th>Element</th><th>What it shows</th></tr></thead>
       <tbody>
-        <tr><td><strong>Profile photo &amp; name</strong></td><td>The LinkedIn user who made the post</td></tr>
-        <tr><td><strong>Headline</strong></td><td>Their job title / description from LinkedIn</td></tr>
-        <tr><td><strong>Post content</strong></td><td>The full text of the post (long posts can be expanded)</td></tr>
-        <tr><td><strong>Post images</strong></td><td>Any images attached to the post</td></tr>
-        <tr><td><strong>Engagement counts</strong></td><td>Number of likes, comments, and shares</td></tr>
-        <tr><td><strong>Website link</strong></td><td>A link to their website if included in the post</td></tr>
-        <tr><td><strong>LinkedIn button</strong></td><td>Opens the original post on LinkedIn</td></tr>
-        <tr><td><strong>Copy button</strong></td><td>Copies the post + your Claude prompt to clipboard</td></tr>
+        <tr><td><strong>Job title</strong></td><td>The role title (e.g., "Creative Project Manager")</td></tr>
+        <tr><td><strong>Company name &amp; link</strong></td><td>Click to open the company page on LinkedIn</td></tr>
+        <tr><td><strong>Location · Type · Seniority · Posted · Applicants</strong></td><td>The job's meta row with quick-glance details</td></tr>
+        <tr><td><strong>Salary pill</strong></td><td>Highlighted in green when the listing includes a salary range</td></tr>
+        <tr><td><strong>Function &amp; industry tags</strong></td><td>The job function (e.g. "Project Management") and industry (e.g. "Marketing Services")</td></tr>
+        <tr><td><strong>Job description</strong></td><td>The full description (long ones can be expanded with "see more")</td></tr>
+        <tr><td><strong>Apply button</strong></td><td>Opens the LinkedIn apply URL. Shows an "Easy Apply" badge when applicable.</td></tr>
+        <tr><td><strong>View on LinkedIn button</strong></td><td>Opens the original job posting on LinkedIn</td></tr>
+        <tr><td><strong>Copy button</strong></td><td>Copies the full job details + your Claude prompt to clipboard</td></tr>
+        <tr><td><strong>Mark as Applied toggle</strong></td><td>Click to mark a job as applied (turns green with a tick). Click again to undo. Saved to your database so it persists across sessions and devices.</td></tr>
+        <tr><td><strong>Hide button</strong></td><td>Removes a listing from your feed so it stops appearing. A 3-second countdown bar gives you time to cancel before it disappears. You can unhide jobs from the Filters panel at any time.</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="callout callout-tip">
+    <span class="icon"><i class="fa-solid fa-lightbulb"></i></span>
+    <div class="callout-content">
+      <strong>Applied &amp; Hidden states are saved to the database</strong>
+      When you mark a job as applied or hide it, that change is saved directly to your Supabase database — not just your browser. This means your applied/hidden history is available even if you open the dashboard on a different device or browser, as long as you've entered your Supabase credentials.
+    </div>
   </div>
 
   <h3>Searching &amp; Filtering</h3>
 
   <h4>Search bar</h4>
-  <p>Type any word or phrase in the search bar at the top of the feed. The dashboard instantly filters to show only posts matching that text (in the post content or the poster's name).</p>
+  <p>Type any word or phrase in the search bar at the top of the feed. The dashboard instantly filters to show only jobs matching that text (in the job title, company name, or description).</p>
 
   <h4>Date filter pills</h4>
   <p>Click one of the date buttons to narrow the feed by recency:</p>
   <ul>
-    <li><span class="badge badge-blue">Today</span> - Posts scraped today</li>
-    <li><span class="badge badge-blue">Week</span> - Posts from the last 7 days</li>
-    <li><span class="badge badge-blue">Month</span> - Posts from the last 30 days</li>
-    <li><span class="badge badge-blue">Year</span> - Posts from the last 12 months</li>
-    <li><span class="badge badge-blue">All</span> - All posts ever collected</li>
+    <li><span class="badge badge-blue">Today</span> - Jobs collected today</li>
+    <li><span class="badge badge-blue">Week</span> - Jobs from the last 7 days</li>
+    <li><span class="badge badge-blue">Month</span> - Jobs from the last 30 days</li>
+    <li><span class="badge badge-blue">Year</span> - Jobs from the last 12 months</li>
+    <li><span class="badge badge-blue">All</span> - All jobs ever collected</li>
   </ul>
 
   <h4>Filters panel</h4>
   <p>Click the <strong>Filters</strong> button to open advanced filters:</p>
   <ul>
-    <li><strong>Location include tags</strong> - Only show posts that mention these locations (e.g., <em>London</em>, <em>Remote</em>)</li>
-    <li><strong>Location exclude tags</strong> - Hide posts that mention these locations (e.g., <em>USA</em>, <em>India</em>)</li>
+    <li><strong>Show jobs mentioning</strong> - Only show jobs that mention these words in title, description, location, or company (e.g., <em>remote</em>, <em>senior</em>)</li>
+    <li><strong>Hide jobs mentioning</strong> - Hide jobs that mention these words (e.g., <em>unpaid</em>, <em>commission only</em>)</li>
   </ul>
   <p>These filters are saved to your database automatically and persist across sessions.</p>
 
   <h3>Refreshing the Feed Manually</h3>
-  <p>Click the <strong>Refresh Feed</strong> button (top-right of the navigation bar) to trigger a scrape immediately - without waiting for the next scheduled time. This is useful when you've just added new keywords or want the very latest posts right now.</p>
+  <p>Click the <strong>Refresh Feed</strong> button (top-right of the navigation bar) to trigger a scrape immediately - without waiting for the next scheduled time. This is useful when you've just added new job titles or want the very latest postings right now.</p>
 
   <div class="callout callout-info">
     <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
     <div class="callout-content">
       <strong>Why does refreshing take a moment?</strong>
-      After clicking Refresh Feed, the dashboard sends a request to start scraping. The scraper runs in the background and can take 1–3 minutes depending on how many keywords you have. New posts will appear in the feed automatically as soon as they're collected - no need to reload the page.
+      After clicking Refresh Feed, the dashboard sends a request to start scraping. The scraper runs in the background and can take 1–3 minutes depending on how many job titles you have. New jobs will appear in the feed automatically as soon as they're collected - no need to reload the page.
     </div>
   </div>
 
-  <h3>Outreach Workflow</h3>
+  <h3>Application Workflow</h3>
 
   <div class="steps">
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
-        <h4>Find a promising post</h4>
-        <p>Browse the feed or search for a keyword. Look for posts from people who are actively hiring or looking for exactly your skills.</p>
+        <h4>Find a promising job</h4>
+        <p>Browse the feed or search by keyword. Look for roles that match your skills and the salary / location you want.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
         <h4>Click Copy</h4>
-        <p>Click the <strong>Copy</strong> button on the post card. The post content plus your Claude prompt is now in your clipboard.</p>
+        <p>Click the <strong>Copy</strong> button on the job card. The full job posting plus your Claude prompt is now in your clipboard.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
         <h4>Paste into Claude or ChatGPT</h4>
-        <p>Open <strong>claude.ai</strong> or <strong>chatgpt.com</strong>, paste (<kbd>Ctrl+V</kbd> or <kbd>Cmd+V</kbd>), and press Enter. The AI will write a personalised outreach message based on the post.</p>
+        <p>Open <strong>claude.ai</strong> or <strong>chatgpt.com</strong>, paste (<kbd>Ctrl+V</kbd> or <kbd>Cmd+V</kbd>), and press Enter. The AI will write a tailored cover letter based on the job description.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
-        <h4>Send your message</h4>
-        <p>Review the AI-generated message, tweak if needed, then send it via LinkedIn's messaging feature or email.</p>
+        <h4>Apply</h4>
+        <p>Review the AI-generated cover letter, tweak if needed, then click <strong>Apply</strong> on the job card to open the LinkedIn application page.</p>
       </div>
     </div>
   </div>
@@ -832,10 +841,10 @@
   <p>The refresh schedule works as follows:</p>
   <ol>
     <li>At the scheduled times, a database job (called a <em>cron job</em>) automatically triggers the scraper.</li>
-    <li>The scraper reads your active search keywords from the database.</li>
-    <li>For each keyword, it calls Apify to collect matching LinkedIn posts.</li>
-    <li>New posts are saved to the database and appear in your feed in real time.</li>
-    <li>Duplicate posts (posts you already have) are automatically skipped - you won't see the same post twice.</li>
+    <li>The scraper reads your active job titles and scraper settings from the database.</li>
+    <li>For each job title, it calls Apify to collect matching LinkedIn jobs using your global Location and filters.</li>
+    <li>New jobs are saved to the database and appear in your feed in real time.</li>
+    <li>Duplicate jobs (matched by LinkedIn job ID) are automatically updated, not duplicated - you won't see the same listing twice.</li>
   </ol>
 
   <div class="callout callout-key">
@@ -866,22 +875,30 @@
   <h3>Opened the dashboard in a new browser and nothing is saved</h3>
   <ul>
     <li>This is expected - credentials are saved per browser. Open the Settings tab, paste your Supabase URL, anon key, and Apify token, then click <strong>Save All Settings</strong>.</li>
-    <li>Your posts and keywords are stored in the database, so they will reappear once the credentials are re-entered.</li>
+    <li>Your jobs and job titles are stored in the database, so they will reappear once the credentials are re-entered.</li>
   </ul>
 
   <h3>"Connection failed" when testing the database</h3>
   <ul>
     <li>Double-check the Supabase URL and anon key in Settings - make sure there are no extra spaces at the beginning or end.</li>
-    <li>Make sure you ran all three CREATE TABLE SQL statements and didn't get an error.</li>
+    <li>Make sure all three tables were created and the RLS policies applied correctly.</li>
     <li>Verify your Supabase project is not paused (free projects pause after a period of inactivity - log in to supabase.com and check).</li>
+  </ul>
+
+  <h3>Moving to a new Supabase account or project</h3>
+  <ul>
+    <li>A full migration export (<code>migration-export.sql</code>) is included in the project files. Paste it into the new project's SQL Editor to recreate all three tables, enable Row Level Security, apply every policy, and seed the scraper settings row in one step.</li>
+    <li>After running the SQL, update your Supabase URL and anon key in the dashboard Settings panel and click <strong>Verify Schema Connection</strong>.</li>
+    <li>Your applied/hidden job states and search keywords are preserved in the export. Job listings will refill automatically on the next scheduled scrape.</li>
   </ul>
 
   <h3>Feed is empty after clicking "Refresh Feed"</h3>
   <ul>
-    <li>Make sure you've added at least one search keyword in Settings → Search Queries.</li>
+    <li>Make sure you've added at least one job title in Settings → Job title searches.</li>
+    <li>Make sure a <strong>Location</strong> is set in Scraper Settings (without one, results may be empty).</li>
     <li>Check that your Apify API token is correct - test it by logging into apify.com and checking your account.</li>
     <li>Wait 2–3 minutes after clicking Refresh - scraping takes time.</li>
-    <li>Check the <strong>Date filter</strong> - if it's set to <em>Today</em> and no posts were scraped yet today, switch to <em>All</em>.</li>
+    <li>Check the <strong>Date filter</strong> - if it's set to <em>Today</em> and no jobs were scraped yet today, switch to <em>All</em>.</li>
   </ul>
 
   <h3>The automatic schedule isn't running</h3>
@@ -897,11 +914,12 @@
     <li>Check that the Supabase Edge Function is listed under <strong>Edge Functions</strong> in your Supabase project dashboard.</li>
   </ul>
 
-  <h3>Posts not showing despite a successful refresh</h3>
+  <h3>Jobs not showing despite a successful refresh</h3>
   <ul>
-    <li>LinkedIn may not have returned results for your keywords on that particular run - try broader keywords.</li>
+    <li>LinkedIn may not have returned results for your job titles in that location - try broader titles or a wider location (e.g., the country instead of a city).</li>
     <li>Apify's free plan may have run out of monthly compute budget - check your usage on apify.com.</li>
-    <li>Make sure the <strong>Time Filter</strong> in Settings isn't too narrow (e.g., set to "Day" when posts were published a week ago).</li>
+    <li>Make sure the <strong>Job posting time</strong> filter isn't too narrow (e.g., set to "Past 24 hours" when no fresh jobs were posted today).</li>
+    <li>Check whether your <strong>Experience level</strong> / <strong>Job type</strong> / <strong>Work schedule</strong> filters are too restrictive - set any of them to "Any" to widen the search.</li>
   </ul>
 
   <div class="callout callout-info">
@@ -933,11 +951,11 @@
         </tr>
         <tr>
           <td><strong>Apify</strong></td>
-          <td>A service that visits websites (like LinkedIn) and collects data from them automatically. It's like sending a very fast robot to scroll through LinkedIn and copy down posts for you.</td>
+          <td>A service that visits websites (like LinkedIn) and collects data from them automatically. It's like sending a very fast robot to scroll through LinkedIn Jobs and copy down listings for you.</td>
         </tr>
         <tr>
           <td><strong>Scraping</strong></td>
-          <td>The process of automatically reading and collecting data from a website. The dashboard "scrapes" LinkedIn to get the posts.</td>
+          <td>The process of automatically reading and collecting data from a website. The dashboard "scrapes" LinkedIn Jobs to get the listings.</td>
         </tr>
         <tr>
           <td><strong>API Token / API Key</strong></td>
@@ -953,7 +971,7 @@
         </tr>
         <tr>
           <td><strong>Realtime</strong></td>
-          <td>A feature that makes new posts appear in your feed instantly without you needing to reload the page.</td>
+          <td>A feature that makes new jobs appear in your feed instantly without you needing to reload the page.</td>
         </tr>
         <tr>
           <td><strong>RLS / Row-Level Security</strong></td>
@@ -977,7 +995,7 @@
         </tr>
         <tr>
           <td><strong>Browser local storage</strong></td>
-          <td>A small storage area inside your browser where the dashboard saves your credentials (Supabase URL, key, Apify token). It's specific to each browser and persists until you clear your cache. Your posts and settings are stored in the database, not in local storage.</td>
+          <td>A small storage area inside your browser where the dashboard saves your credentials (Supabase URL, key, Apify token). It's specific to each browser and persists until you clear your cache. Your jobs and settings are stored in the database, not in local storage.</td>
         </tr>
         <tr>
           <td><strong>Vercel</strong></td>
@@ -1005,13 +1023,13 @@
     </div>
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-      <h4>Search posts</h4>
+      <h4>Search jobs</h4>
       <p>Type in the search bar at the top of the Feed tab.</p>
     </div>
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-clipboard-list"></i></div>
-      <h4>Copy for outreach</h4>
-      <p>Click <strong>Copy</strong> on any post card → paste into Claude / ChatGPT.</p>
+      <h4>Copy for cover letter</h4>
+      <p>Click <strong>Copy</strong> on any job card → paste into Claude / ChatGPT.</p>
     </div>
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-gear"></i></div>
