@@ -1,26 +1,24 @@
 # LinkedIn Opportunity Dashboard
 
-A personal dashboard that aggregates LinkedIn job listings into a clean, searchable feed. It uses **Apify** to scrape LinkedIn jobs, a **Supabase Edge Function** to automate the pipeline, and **Supabase** as the database — all configured through a built-in Settings panel.
+A personal dashboard that aggregates LinkedIn **job listings** and **people's posts sharing opportunities** into a single, searchable feed. Two independent Apify scrapers run on a schedule (or on demand), writing to Supabase — the dashboard surfaces everything in real time.
 
 ---
 
 ## How It Works
 
 ```
-Supabase Edge Function (linkedin-refresh)
-  └── triggered by schedule (pg_cron) or "Refresh Feed" button
-        └── reads scraper config from Supabase
-              └── runs Apify LinkedIn Jobs Scraper Actor
-                    └── upserts jobs to Supabase
-                          └── Dashboard updates in real-time
+Two Supabase Edge Functions (run in parallel, each gated by its own is_active toggle)
+
+linkedin-refresh                          linkedin-posts-refresh
+  └── worldunboxer~rapid-linkedin-scraper   └── harvestapi~linkedin-post-search
+        └── upserts → linkedin_jobs_lexiecoon     └── upserts → linkedin_posts_lexiecoon
+                                                                    │
+                        Dashboard (Feed tab) ◄── Supabase Realtime ─┘
 ```
 
-1. You click **Refresh Feed** (or the Edge Function runs on a schedule).
-2. The Edge Function reads your scraper settings and job-title queries from Supabase.
-3. It calls the Apify `worldunboxer~rapid-linkedin-scraper` actor once per job title.
-4. Apify scrapes LinkedIn Jobs and returns structured job records.
-5. The Edge Function upserts the jobs into Supabase (deduplicated by `job_id`).
-6. The dashboard reflects the new jobs instantly via Supabase Realtime.
+1. **Refresh Feed** button (or pg_cron schedule) fires one or both edge functions depending on the current feed view (All → both; Jobs → jobs only; Posts → posts only).
+2. Each function reads its config row and active keywords from Supabase, calls Apify, and upserts results (deduplicated by `job_id` / post `id`).
+3. New rows appear in the dashboard instantly via Supabase Realtime — no page reload needed.
 
 ---
 
@@ -28,146 +26,31 @@ Supabase Edge Function (linkedin-refresh)
 
 - [Node.js](https://nodejs.org/) v18+
 - A [Supabase](https://supabase.com/) project (free tier works)
-- The [Supabase CLI](https://supabase.com/docs/guides/cli) installed (`npm install -g supabase`)
-- An [Apify](https://apify.com/) account with access to the [worldunboxer/rapid-linkedin-scraper](https://console.apify.com/actors/JkfTWxtpgfvcRQn3p/input) actor
+- The [Supabase CLI](https://supabase.com/docs/guides/cli) (`npm install -g supabase`)
+- An [Apify](https://apify.com/) account with access to both actors:
+  - [`worldunboxer/rapid-linkedin-scraper`](https://console.apify.com/actors/JkfTWxtpgfvcRQn3p) — jobs
+  - [`harvestapi/linkedin-post-search`](https://console.apify.com/actors/harvestapi~linkedin-post-search) — posts
 
 ---
 
-## Step 1 — Supabase Setup
+## Step 1 — Supabase Schema
 
-> **Migrating to a new Supabase project?** Use the ready-made export at [`migration-export.sql`](migration-export.sql) — paste it directly in the SQL Editor to create all tables, enable RLS, apply all policies, and seed the initial config row in one shot. Skip the manual SQL below.
+> **Quickest path:** paste [`migration-export.sql`](migration-export.sql) into the Supabase **SQL Editor** and run it. It creates all six tables, enables RLS, applies every policy, seeds the config rows, and enables Realtime in one shot.
 
-In your Supabase project, open the **SQL Editor** and run the following to create the required tables:
+The schema includes:
 
-```sql
--- ── Jobs table ──
-CREATE TABLE IF NOT EXISTS public.linkedin_jobs_lexiecoon (
-  job_id            text                     NOT NULL,
-  job_url           text,
-  job_title         text,
-  company_name      text,
-  company_url       text,
-  location          text,
-  time_posted       text,
-  num_applicants    text,
-  salary_range      text,
-  job_description   text,
-  seniority_level   text,
-  employment_type   text,
-  job_function      text,
-  industries        text,
-  easy_apply        boolean                  DEFAULT false,
-  apply_url         text,
-  created_at        timestamp with time zone DEFAULT now(),
-  updated_at        timestamp with time zone DEFAULT now(),
-  company_logo_url  text,
-  applied           boolean                  DEFAULT false,
-  hidden            boolean                  DEFAULT false,
-  CONSTRAINT linkedin_jobs_lexiecoon_pkey PRIMARY KEY (job_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_jobs_created_at
-  ON public.linkedin_jobs_lexiecoon USING btree (created_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_jobs_search_fts
-  ON public.linkedin_jobs_lexiecoon USING gin (
-    to_tsvector('english', coalesce(job_title,'') || ' ' || coalesce(job_description,'') || ' ' || coalesce(company_name,''))
-  );
-
--- ── Scraper settings table ──
-CREATE TABLE IF NOT EXISTS public.scraper_settings_lexiecoon (
-  id                uuid                     NOT NULL DEFAULT gen_random_uuid(),
-  apify_token       text                     DEFAULT ''::text,
-  created_at        timestamp with time zone DEFAULT now(),
-  updated_at        timestamp with time zone DEFAULT now(),
-  configs_name      text,
-  is_active         boolean,
-  location_terms    text                     DEFAULT '{}'::text[],
-  exclude_terms     text                     DEFAULT '{}'::text[],
-  schedule_hour_1   integer                  DEFAULT 12,
-  schedule_hour_2   integer                  DEFAULT 16,
-  location          text                     DEFAULT ''::text,
-  jobs_entries      integer                  DEFAULT 100,
-  company_names     text                     DEFAULT ''::text,
-  experience_level  text                     DEFAULT ''::text,
-  job_type          text                     DEFAULT ''::text,
-  work_schedule     text                     DEFAULT ''::text,
-  job_post_time     text                     DEFAULT ''::text,
-  start_jobs        integer                  DEFAULT 0,
-  CONSTRAINT scraper_settings_lexiecoon_pkey PRIMARY KEY (id)
-);
-
--- ── Search keywords table ──
-CREATE TABLE IF NOT EXISTS public.search_keywords_lexiecoon (
-  id          uuid                     NOT NULL DEFAULT gen_random_uuid(),
-  keyword     text                     NOT NULL,
-  is_active   boolean                  DEFAULT true,
-  created_at  timestamp with time zone DEFAULT now(),
-  CONSTRAINT search_keywords_lexiecoon_pkey        PRIMARY KEY (id),
-  CONSTRAINT search_keywords_lexiecoon_keyword_key UNIQUE (keyword)
-);
-
--- Enable Realtime on the jobs table so the dashboard updates live
-ALTER PUBLICATION supabase_realtime ADD TABLE public.linkedin_jobs_lexiecoon;
-```
-
-### Row Level Security (RLS)
-
-All three tables require RLS enabled with the following policies. Run this after creating the tables:
-
-```sql
--- ── linkedin_jobs_lexiecoon ──
-ALTER TABLE public.linkedin_jobs_lexiecoon ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Public read"
-  ON public.linkedin_jobs_lexiecoon FOR SELECT TO public USING (true);
-
-CREATE POLICY "Allow anon update"
-  ON public.linkedin_jobs_lexiecoon FOR UPDATE TO anon USING (true) WITH CHECK (true);
-
-CREATE POLICY "Service write"
-  ON public.linkedin_jobs_lexiecoon FOR ALL TO public
-  USING (auth.role() = 'service_role');
-
--- ── scraper_settings_lexiecoon ──
-ALTER TABLE public.scraper_settings_lexiecoon ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "anon read settings"
-  ON public.scraper_settings_lexiecoon FOR SELECT TO anon, authenticated USING (true);
-
-CREATE POLICY "anon update settings"
-  ON public.scraper_settings_lexiecoon FOR UPDATE TO anon, authenticated
-  USING (true) WITH CHECK (true);
-
-CREATE POLICY "anon upsert settings"
-  ON public.scraper_settings_lexiecoon FOR INSERT TO anon, authenticated WITH CHECK (true);
-
--- ── search_keywords_lexiecoon ──
-ALTER TABLE public.search_keywords_lexiecoon ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "anon read keywords"
-  ON public.search_keywords_lexiecoon FOR SELECT TO anon, authenticated USING (true);
-
-CREATE POLICY "anon insert keywords"
-  ON public.search_keywords_lexiecoon FOR INSERT TO anon, authenticated WITH CHECK (true);
-
-CREATE POLICY "anon update keywords"
-  ON public.search_keywords_lexiecoon FOR UPDATE TO anon, authenticated
-  USING (true) WITH CHECK (true);
-
-CREATE POLICY "anon delete keywords"
-  ON public.search_keywords_lexiecoon FOR DELETE TO anon, authenticated USING (true);
-```
-
-> **Verify policies are applied:**
-> ```sql
-> SELECT tablename, policyname, roles, cmd FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename;
-> ```
-> If the feed shows empty despite having rows, missing RLS policies are the most likely cause — Supabase returns 0 rows silently when no permissive policy exists.
+| Table | Purpose |
+|-------|---------|
+| `linkedin_jobs_lexiecoon` | Scraped job listings (PK: `job_id`) |
+| `scraper_settings_lexiecoon` | Jobs-scraper config + feed filters (`location_terms`, `exclude_terms`) |
+| `search_keywords_lexiecoon` | Job-title search keywords |
+| `linkedin_posts_lexiecoon` | Scraped LinkedIn posts (PK: `id`) |
+| `posts_scraper_settings_lexiecoon` | Posts-scraper config |
+| `posts_search_keywords_lexiecoon` | Post search query keywords |
 
 After running the SQL:
 1. Go to **Project Settings → API** in Supabase.
-2. Copy your **Project URL** and **anon public** key — you'll need these in the dashboard.
+2. Copy your **Project URL** and **anon public** key — you'll need these in the dashboard Settings.
 
 ---
 
@@ -184,62 +67,76 @@ The app runs at [http://localhost:3000](http://localhost:3000).
 
 ## Step 3 — Configure the Dashboard
 
-Open the **Settings** tab in the app.
+Open the **Settings** tab in the app. The **Save All Settings** button appears only when you have unsaved changes.
 
 ### Database (Supabase)
-- Paste your Supabase **Project URL** and **Anon Public Key**.
-- Click **Verify Schema Connection** to confirm it can reach your tables.
+Paste your **Project URL** and **Anon Public Key**, then click **Verify Schema Connection**.
+
+### Scraper Toggles
+Two toggle buttons independently enable/disable each scraper. When a scraper is off, the edge function exits immediately (no Apify credits used). Useful for days when you only want one feed type.
 
 ### Job Title Searches
-- Add the job titles you want to scrape (e.g. `Creative Project Manager`, `Digital Producer`).
-- Each title triggers one scrape call against the global Location and filters configured below.
+Add the job titles you want to scrape (e.g. `Creative Project Manager`, `Digital Producer`). Each title triggers one search against the Location and filters in the Jobs Scraper Settings section.
 
-### Scraper Settings (Apify)
+### Post Searches
+Add LinkedIn search queries for the posts feed (e.g. `Digital Producer NYC hiring`, `Video Editor remote opportunity`). These are the same phrases you'd type into LinkedIn's search bar — the scraper finds posts people share about openings.
+
+### Jobs Scraper Settings (Apify — `worldunboxer/rapid-linkedin-scraper`)
+
 | Field | Description |
 |-------|-------------|
-| Location | Location applied to every job-title search (e.g. `Brooklyn, NY`, `Remote, United States`). |
-| Number of jobs per query | Max jobs to fetch per job title. 1–10000. Default 100. |
-| Search after how many jobs | Skip this many results before starting. Useful for paginating past already-collected jobs. |
-| Experience level | Internship, Entry level, Associate, Mid-Senior level, Director, Executive, or Any. |
-| Job type | Full-time, Part-time, Contract, Temporary, Volunteer, Internship, Other, or Any. |
-| Work schedule | On-site, Remote, Hybrid, or Any. |
-| Job posting time | Past 24 hours, Past week, Past month, or Any time. |
-| Company names | Tag list. Only return jobs from these companies. Leave empty for all. |
-| Apify API Token | Your personal API token from [apify.com/account](https://console.apify.com/account/integrations). |
+| Location | City / region applied to every job-title search. |
+| Number of jobs per query | Max jobs per title. Default 100. |
+| Experience level | Entry level, Mid-Senior, Director, etc. |
+| Job type | Full-time, Part-time, Contract, etc. |
+| Work schedule | On-site, Remote, Hybrid. |
+| Job posting time | Past 24h, Past week, Past month, Any. |
+| Company names | Only return jobs from these companies (leave empty for all). |
+| Apify API Token | Your token from [apify.com/account](https://console.apify.com/account/integrations). |
+
+### Posts Scraper Settings (Apify — `harvestapi/linkedin-post-search`)
+
+| Field | Description |
+|-------|-------------|
+| Max posts per query | How many posts to collect per keyword per run. |
+| Posted limit | Only return posts no older than this window (24h, week, month, etc.). |
+| Sort by | Date (newest first) or Relevance. |
+| Content type | All, Videos, Images, Documents, etc. |
+| Author URLs | Restrict to specific LinkedIn profiles / company pages. |
+| Authors' companies | Only posts from people at these companies. |
+| Author keywords | Only posts from people whose headline contains these words. |
+| Apify API Token (posts) | Can be the same token as the jobs scraper. |
+
+### Auto-Refresh Schedule
+Two daily run times (in your local timezone). The dashboard converts them to UTC automatically.
 
 ### Claude Prompt
-- Optional text prepended when you click the **Copy** button on a job card.
-- Customize it to match your background so Claude (or any AI) can draft a tailored cover letter.
-
-Click **Save All Settings** to persist everything.
+Text prepended when you click **Copy** on any card — used to generate a cover letter or outreach message via Claude or ChatGPT.
 
 ---
 
-## Step 4 — Deploy the Edge Function
-
-The scraping pipeline runs as a Supabase Edge Function (`linkedin-refresh`) — no n8n required.
-
-### Deploy
+## Step 4 — Deploy the Edge Functions
 
 ```bash
 supabase login
 supabase link --project-ref YOUR_PROJECT_REF
 supabase functions deploy linkedin-refresh --no-verify-jwt
+supabase functions deploy linkedin-posts-refresh --no-verify-jwt
 ```
 
-`YOUR_PROJECT_REF` is the short alphanumeric ID found at **Supabase Dashboard → Project Settings → General → Reference ID**.
+`YOUR_PROJECT_REF` is under **Supabase Dashboard → Project Settings → General → Reference ID**.
 
-`--no-verify-jwt` is required so pg_cron can call the function without a user JWT.
+`--no-verify-jwt` is required so pg_cron can invoke the functions without a user JWT.
 
 ### Schedule automatic runs (pg_cron)
 
-Run this in the **Supabase SQL Editor** to trigger the function at 12pm and 4pm UTC daily:
+Run this in the Supabase **SQL Editor** to trigger both functions at 12:00 and 16:00 UTC daily:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- 12:00 PM UTC
+-- Jobs scraper — 12:00 PM UTC
 SELECT cron.schedule('linkedin-refresh-noon', '0 12 * * *', $$
   SELECT net.http_post(
     url     := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-refresh',
@@ -248,10 +145,28 @@ SELECT cron.schedule('linkedin-refresh-noon', '0 12 * * *', $$
   );
 $$);
 
--- 4:00 PM UTC
+-- Posts scraper — 12:05 PM UTC (offset slightly to avoid concurrent DB load)
+SELECT cron.schedule('linkedin-posts-refresh-noon', '5 12 * * *', $$
+  SELECT net.http_post(
+    url     := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-posts-refresh',
+    headers := '{"Content-Type":"application/json","Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb,
+    body    := '{}'::jsonb
+  );
+$$);
+
+-- Jobs scraper — 4:00 PM UTC
 SELECT cron.schedule('linkedin-refresh-afternoon', '0 16 * * *', $$
   SELECT net.http_post(
     url     := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-refresh',
+    headers := '{"Content-Type":"application/json","Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb,
+    body    := '{}'::jsonb
+  );
+$$);
+
+-- Posts scraper — 4:05 PM UTC
+SELECT cron.schedule('linkedin-posts-refresh-afternoon', '5 16 * * *', $$
+  SELECT net.http_post(
+    url     := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-posts-refresh',
     headers := '{"Content-Type":"application/json","Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb,
     body    := '{}'::jsonb
   );
@@ -261,37 +176,64 @@ $$);
 SELECT jobname, schedule FROM cron.job WHERE jobname LIKE 'linkedin%';
 ```
 
-Replace `YOUR_PROJECT_REF` and `YOUR_ANON_KEY` (the anon public key from **Project Settings → API**).
+Replace `YOUR_PROJECT_REF` and `YOUR_ANON_KEY`.
 
 ### Test manually
 
 ```bash
+# Jobs
 curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-refresh \
+  -H "Authorization: Bearer YOUR_ANON_KEY" \
+  -H "Content-Type: application/json" -d '{}'
+
+# Posts
+curl -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/linkedin-posts-refresh \
   -H "Authorization: Bearer YOUR_ANON_KEY" \
   -H "Content-Type: application/json" -d '{}'
 ```
 
-Expected response: `{"status":"accepted","message":"Scrape started in background"}` (HTTP 202).
-Jobs will appear in the feed via Realtime within 1–5 minutes depending on the number of job titles configured.
+Both return `{"status":"accepted","message":"..."}` (HTTP 202). Results appear in the feed within 1–5 minutes.
 
 ### View logs
 
 ```bash
 supabase functions logs linkedin-refresh --tail
+supabase functions logs linkedin-posts-refresh --tail
 ```
 
 ---
 
 ## Using the Feed
 
-| Control | What it does |
-|---------|-------------|
-| Search bar | Filters by job title, company, or description (client-side, instant). |
-| Date pills (Today / Week / Month / Year / All) | Limits results by `created_at`. |
-| Filters button | Opens include / exclude tag filters. Persisted to Supabase. |
-| Refresh Feed | Triggers the Edge Function then reloads jobs. New jobs also arrive automatically via Realtime. |
-| Apply (on job card) | Opens the LinkedIn apply URL in a new tab. Shows "Easy Apply" badge if applicable. |
-| Copy (on job card) | Copies the job posting details prefixed with your Claude prompt. |
+### View modes
+The feed has three tabs — **All** (jobs + posts merged, newest first), **Posts**, **Jobs**. The **Refresh Feed** button fires only the scraper(s) relevant to the current view.
+
+### Job cards
+Show job title, company, location, employment type, seniority, salary, description, and engagement controls:
+- **Copy** — copies the full posting + your Claude prompt to clipboard
+- **Mark as Applied** — green tick, saved to DB across devices
+- **Hide** — 3-second undo bar, then hidden permanently (reveal via Filters → Show hidden)
+- **Apply / Easy Apply** — opens the LinkedIn application page
+
+### Post cards
+Show the poster's avatar, name, author info, post content (expandable), images, and engagement counts:
+- **Copy** — copies post text + your Claude prompt (useful for outreach messages)
+- **Save (star)** — amber bookmark, saved to DB
+- **Hide** — same 3-second undo bar as job cards
+- **View on LinkedIn** — opens the original post
+
+### Filters (DB-backed, persist across sessions)
+| Filter | Applies to | Logic |
+|--------|-----------|-------|
+| Date pills (Last 24h / Week / Month / Year / All) | Both | Filters by `time_posted` (jobs) or `posted_at` (posts) |
+| Easy Apply only | Jobs | Shows only one-click apply listings |
+| Employment Type | Jobs | Full-time, Part-time, Contract, etc. |
+| Seniority Level | Jobs | Entry level, Mid-Senior, Director, etc. |
+| Show hidden | Both | Reveals hidden items as faded cards |
+| **Show only — mentioning any of** | Both | OR logic — item must mention at least one term (location, content, author info) |
+| **Hide items containing** | Both | Item is removed if it mentions any term |
+
+Both the "mentioning" and "hide" filters are chip lists backed by `scraper_settings_lexiecoon` — adding or removing a chip saves to Supabase immediately.
 
 ---
 
@@ -303,18 +245,23 @@ supabase functions logs linkedin-refresh --tail
 | Styling | Tailwind CSS v4 |
 | Database | Supabase (PostgreSQL + Realtime) |
 | Automation | Supabase Edge Functions (Deno) + pg_cron |
-| Scraping | Apify — `worldunboxer/rapid-linkedin-scraper` |
+| Jobs scraper | Apify — `worldunboxer/rapid-linkedin-scraper` |
+| Posts scraper | Apify — `harvestapi/linkedin-post-search` |
 
 ---
 
 ## Troubleshooting
 
-**"linkedin_jobs_lexiecoon table not found"** — Run the SQL setup in Step 1.
+**Table not found** — Run [`migration-export.sql`](migration-export.sql) in the SQL Editor. It's idempotent (`CREATE TABLE IF NOT EXISTS`).
 
-**Refresh Feed shows an error** — Check that your Supabase URL and Anon Key are saved in Settings, and that the Edge Function is deployed (`supabase functions list`).
+**Posts feed empty after refresh** — Make sure the posts scraper toggle is on, at least one post keyword is added, and the Apify token is entered in Posts Scraper Settings.
 
-**Jobs not appearing after refresh** — The Edge Function responds immediately (202) and scrapes in the background. Check the logs with `supabase functions logs linkedin-refresh --tail`. Apify scrapes typically take 1–5 minutes per job title.
+**Refresh Feed shows an error banner** — Check both edge functions are deployed (`supabase functions list`). A "partial failure" means one scraper worked and the other didn't — check that function's logs.
 
-**Jobs not updating in real-time** — Make sure you added `linkedin_jobs_lexiecoon` to the `supabase_realtime` publication (last line of the SQL setup).
+**Items not appearing after refresh** — Both edge functions respond 202 immediately and scrape in the background (1–5 min). Check logs with `supabase functions logs <name> --tail`.
 
-**pg_cron jobs not running** — Confirm `pg_cron` and `pg_net` extensions are enabled in **Supabase Dashboard → Database → Extensions**. Verify jobs exist with `SELECT jobname, schedule FROM cron.job;`.
+**Items not updating in real-time** — Confirm `linkedin_jobs_lexiecoon` and `linkedin_posts_lexiecoon` are both in the `supabase_realtime` publication (both are added by the migration SQL).
+
+**pg_cron jobs not running** — Confirm `pg_cron` and `pg_net` extensions are enabled in **Database → Extensions**. Verify jobs exist with `SELECT jobname, schedule FROM cron.job;`.
+
+**Save All Settings button doesn't appear** — The button only shows when there are unsaved changes. Edit any field to trigger it.

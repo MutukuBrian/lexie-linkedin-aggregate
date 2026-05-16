@@ -10,3 +10,5 @@ coverage/
 .mcp.json
 supabase/.temp/
 
+
+.vercel

@@ -398,21 +398,26 @@
   <h2><span class="icon"><i class="fa-solid fa-thumbtack"></i></span> 1. What This Dashboard Does</h2>
 
   <div class="section-intro">
-    Lexie's LinkedIn Aggregator automatically finds and displays LinkedIn <strong>job postings</strong> matching the roles you're looking for - all in one place, updated twice a day.
+    Lexie's LinkedIn Aggregator automatically finds and displays two types of LinkedIn content — <strong>job postings</strong> and <strong>people's posts sharing opportunities</strong> — all in one place, updated twice a day.
   </div>
 
-  <p>Instead of manually scrolling through LinkedIn Jobs every day hoping to catch the right opening, this dashboard does the searching for you. You tell it what job titles you're looking for (e.g., <em>"Creative Project Manager"</em>, <em>"Digital Producer"</em>), set a location, and it automatically collects matching job listings and shows them in a clean, easy-to-browse feed.</p>
+  <p>Instead of manually scrolling through LinkedIn every day, this dashboard does the searching for you. It collects both official LinkedIn job listings <em>and</em> posts people share on their feed (e.g. "We're hiring!" or "My company has an opening for…"). People's posts are often more authentic than formal job board listings, and they frequently mention roles that never appear on the jobs board at all.</p>
 
   <div class="card-grid">
     <div class="card">
-      <div class="card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-      <h4>Automated Search</h4>
-      <p>Searches LinkedIn for your chosen keywords so you don't have to scroll endlessly.</p>
+      <div class="card-icon"><i class="fa-solid fa-briefcase"></i></div>
+      <h4>Jobs Feed</h4>
+      <p>Scrapes LinkedIn's official jobs board for your chosen titles and location.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fa-regular fa-comment-dots"></i></div>
+      <h4>Posts Feed</h4>
+      <p>Scrapes LinkedIn posts — people sharing real opportunities to their feed. Often more authentic than job listings.</p>
     </div>
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-layer-group"></i></div>
-      <h4>Organised Feed</h4>
-      <p>All matching jobs stored in one searchable feed, sorted by date.</p>
+      <h4>All-in-One Feed</h4>
+      <p>Switch between <em>All</em>, <em>Posts</em>, and <em>Jobs</em> views in one click. Both sources merged and sorted newest-first.</p>
     </div>
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-clock"></i></div>
@@ -422,17 +427,12 @@
     <div class="card">
       <div class="card-icon"><i class="fa-solid fa-clipboard-list"></i></div>
       <h4>One-Click Outreach</h4>
-      <p>Copy any job posting with your custom prompt attached - ready to paste into Claude or ChatGPT for a tailored cover letter.</p>
+      <p>Copy any job or post with your custom prompt attached - ready to paste into Claude or ChatGPT for a tailored cover letter or outreach message.</p>
     </div>
     <div class="card">
-      <div class="card-icon"><i class="fa-solid fa-filter"></i></div>
-      <h4>Smart Filtering</h4>
-      <p>Filter by location, date range, or keywords to find the most relevant jobs quickly.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon"><i class="fa-solid fa-dollar-sign"></i></div>
-      <h4>Job Details at a Glance</h4>
-      <p>See salary range, employment type, experience level, and application URL right on the card.</p>
+      <div class="card-icon"><i class="fa-solid fa-toggle-on"></i></div>
+      <h4>Cost Controls</h4>
+      <p>Toggle either scraper on or off from Settings to avoid unnecessary Apify charges when you only need one feed.</p>
     </div>
   </div>
 
@@ -440,7 +440,7 @@
     <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
     <div class="callout-content">
       <strong>How it works in plain English</strong>
-      Behind the scenes, the dashboard uses a service called Apify to scrape (collect) public LinkedIn job postings matching your search terms. Those jobs are saved to a secure private database (Supabase), and the dashboard displays them in real time. Your credentials are stored only in your browser - nothing is shared with third parties.
+      Behind the scenes, the dashboard uses a service called Apify to scrape (collect) public LinkedIn content. The <strong>jobs scraper</strong> uses the <em>worldunboxer/rapid-linkedin-scraper</em> actor and the <strong>posts scraper</strong> uses the <em>harvestapi/linkedin-post-search</em> actor. All results are saved to your secure private Supabase database and appear in real time. Your credentials are stored only in your browser — nothing is shared with third parties.
     </div>
   </div>
 
@@ -588,16 +588,17 @@
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
-        <h4>Enter your Apify token</h4>
-        <p>Scroll down to the <strong>Scraper Settings</strong> section and paste your Apify API token into the <strong>Apify API Token</strong> field.</p>
+        <h4>Enter your Apify token(s)</h4>
+        <p>Scroll down to <strong>Scraper Settings (Apify Engine)</strong> and paste your Apify API token into the <strong>Apify API Token</strong> field. Then do the same in the <strong>Posts Scraper Settings</strong> section — it can be the same token; both scrapers run under your Apify account.</p>
       </div>
     </div>
 
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
-        <h4>Add your job titles</h4>
-        <p>In the <strong>Job title searches</strong> section, type a job title and press <kbd>Enter</kbd> to add it. Repeat for each role you want the dashboard to monitor (e.g., <em>Creative Project Manager</em>, <em>Digital Producer</em>). Then, in <strong>Scraper Settings</strong>, set the <strong>Location</strong> (e.g., <em>Brooklyn, NY</em>) that applies to every job title.</p>
+        <h4>Add your job titles and post search queries</h4>
+        <p>In the <strong>Job title searches</strong> section, type a job title and press <kbd>Enter</kbd> to add it (e.g., <em>Creative Project Manager</em>, <em>Digital Producer</em>). Then set a <strong>Location</strong> in Scraper Settings.</p>
+        <p>In the <strong>Post searches</strong> section, add LinkedIn search queries to find people's posts about openings (e.g., <em>Digital Producer NYC hiring</em>, <em>Video Editor remote opportunity</em>). These are the same queries you'd type into LinkedIn's search bar.</p>
       </div>
     </div>
 
@@ -605,7 +606,7 @@
       <div class="step-num"></div>
       <div class="step-body">
         <h4>Save your settings</h4>
-        <p>Scroll to the bottom and click <strong>Save All Settings</strong>. Your credentials are now saved in your browser - you won't need to enter them again unless you clear your browser cache or switch to a different browser.</p>
+        <p>When any setting changes, a <strong>Save All Settings</strong> button will appear at the bottom of the page — click it to persist everything. Your credentials are saved in your browser and all other config is stored in the database.</p>
       </div>
     </div>
 
@@ -613,7 +614,7 @@
       <div class="step-num"></div>
       <div class="step-body">
         <h4>Do your first manual refresh</h4>
-        <p>Click the <strong>Refresh Feed</strong> button in the top navigation bar. Wait 1–3 minutes. Your first batch of LinkedIn jobs will appear in the Feed tab automatically.</p>
+        <p>In the Feed tab, make sure the view is set to <strong>All</strong>, then click <strong>Refresh Feed</strong> in the top navigation bar. Wait 1–3 minutes. Jobs and posts will appear automatically as they're collected — no page reload needed.</p>
       </div>
     </div>
   </div>
@@ -638,17 +639,43 @@
   <h3>Section 1 - Database Connection</h3>
   <p>This is where you paste your Supabase Project URL and anon public key (covered in Section 3). Click <strong>Verify Schema Connection</strong> to confirm the connection is working - you should see a green success message. If credentials were already entered during handover, this should already show as connected.</p>
 
-  <h3>Section 2 - Job Title Searches</h3>
-  <p>Enter the job titles you want to monitor on LinkedIn. Press <kbd>Enter</kbd> after each title to add it as a tag. Examples:</p>
+  <h3>Section 2 - Scraper Toggles</h3>
+  <p>Two toggle buttons let you independently enable or disable each scraper:</p>
+  <ul>
+    <li><strong>Jobs scraper</strong> — controls the LinkedIn jobs board scraper. When off, the Refresh button skips it and no Apify credits are used for jobs.</li>
+    <li><strong>Posts scraper</strong> — controls the LinkedIn posts feed scraper. When off, the Refresh button skips it.</li>
+  </ul>
+  <p>Turn one off if you only want the other. For example, if you already have plenty of job listings and only want fresh posts today, toggle the jobs scraper off temporarily. Toggling is instant — just click the button and it auto-saves.</p>
+
+  <div class="callout callout-tip">
+    <span class="icon"><i class="fa-solid fa-lightbulb"></i></span>
+    <div class="callout-content">
+      <strong>Save Apify credits</strong>
+      Each scrape run costs Apify credits. If you only need one type of content on a given day, turn the other scraper off before clicking Refresh Feed.
+    </div>
+  </div>
+
+  <h3>Section 3 - Job Title Searches</h3>
+  <p>Enter the job titles you want to monitor on LinkedIn Jobs. Press <kbd>Enter</kbd> after each title to add it as a tag. Examples:</p>
   <ul>
     <li><em>Creative Project Manager</em></li>
     <li><em>Digital Producer</em></li>
     <li><em>Content Strategist</em></li>
     <li><em>Social Media Manager</em></li>
   </ul>
-  <p>Each job title runs as a separate LinkedIn Jobs search, using the global Location and filters configured below. More titles means more jobs but uses more of your Apify budget.</p>
+  <p>Each job title runs as a separate LinkedIn Jobs search, using the global Location and filters configured in Section 4. More titles means more jobs but uses more of your Apify budget.</p>
 
-  <h3>Section 3 - Scraper Settings</h3>
+  <h3>Section 4 - Post Searches</h3>
+  <p>Enter the search queries you want to use for the LinkedIn <em>posts</em> feed. These are the same phrases you'd type into LinkedIn's search bar when looking for posts about opportunities. Press <kbd>Enter</kbd> after each one. Examples:</p>
+  <ul>
+    <li><em>Digital Producer NYC hiring</em></li>
+    <li><em>Creative Project Manager remote opportunity</em></li>
+    <li><em>Video Editor we're hiring</em></li>
+    <li><em>Content Strategist looking for</em></li>
+  </ul>
+  <p>Each query runs a separate posts scrape. Results are people's posts — not job listings — so you'll often find opportunities that never made it to the official jobs board.</p>
+
+  <h3>Section 5 - Scraper Settings (Jobs)</h3>
 
   <div class="table-wrap">
     <table>
@@ -705,10 +732,62 @@
     </table>
   </div>
 
-  <h3>Section 4 - Auto-Refresh Schedule</h3>
+  <h3>Section 6 - Posts Scraper Settings (harvestapi)</h3>
+  <p>Controls how the LinkedIn posts scraper behaves. Key settings:</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Setting</th><th>What it does</th><th>Recommended</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Max posts per query</strong></td>
+          <td>How many posts to collect per search query per run</td>
+          <td>10–25</td>
+        </tr>
+        <tr>
+          <td><strong>Posted limit</strong></td>
+          <td>Only return posts no older than this window (e.g. 24h, week, month)</td>
+          <td>24h or week</td>
+        </tr>
+        <tr>
+          <td><strong>Sort by</strong></td>
+          <td>Sort results by <em>Date</em> (newest first) or <em>Relevance</em></td>
+          <td>Date</td>
+        </tr>
+        <tr>
+          <td><strong>Content type</strong></td>
+          <td>Filter to a specific media type — All, Videos, Images, Jobs, Documents, etc.</td>
+          <td>All</td>
+        </tr>
+        <tr>
+          <td><strong>Author URLs</strong></td>
+          <td>Only return posts by these specific LinkedIn profiles or company pages</td>
+          <td>Leave blank for broad search</td>
+        </tr>
+        <tr>
+          <td><strong>Authors' companies</strong></td>
+          <td>Only return posts from people who work (or worked) at these companies</td>
+          <td>Optional</td>
+        </tr>
+        <tr>
+          <td><strong>Author keywords</strong></td>
+          <td>Only return posts from people whose LinkedIn headline/title contains these words (e.g. <em>recruiter</em>, <em>talent</em>)</td>
+          <td>Optional</td>
+        </tr>
+        <tr>
+          <td><strong>Apify API Token (posts)</strong></td>
+          <td>Your Apify token — can be the same as the jobs scraper token</td>
+          <td>Required</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Section 7 - Auto-Refresh Schedule</h3>
   <p>Pick two times per day when you'd like the dashboard to automatically scrape LinkedIn. The times are set in <strong>your local timezone</strong> and automatically converted to the correct format in the database. A good choice is once in the morning (e.g., 9:00 AM) and once in the early afternoon (e.g., 2:00 PM).</p>
 
-  <h3>Section 5 - Claude Prompt</h3>
+  <h3>Section 8 - Claude Prompt</h3>
   <p>When you click the <strong>Copy</strong> button on any job card, this text is prepended to the copied content (which includes the job title, company, location, employment type, salary if available, and the full description). Use it to set up a reusable AI prompt for writing cover letters. For example:</p>
   <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:16px 20px; margin:12px 0; font-style:italic; font-size:13.5px;">
     "Based on this LinkedIn job posting and my CV, write a tailored cover letter. Highlight the experience that most closely matches the role's requirements. Keep it under one page, professional and warm."
@@ -729,27 +808,60 @@
   <h2 class="page-break"><span class="icon"><i class="fa-solid fa-desktop"></i></span> 5. Using the Dashboard Every Day</h2>
 
   <div class="section-intro">
-    Once set up, your daily workflow is simple: open the dashboard, browse the feed, and apply to (or save) the jobs that match. The scraper runs automatically - you don't need to do anything to keep the feed fresh.
+    Once set up, your daily workflow is simple: open the dashboard, browse the feed, and act on the opportunities that match. The scraper runs automatically - you don't need to do anything to keep the feed fresh.
   </div>
 
-  <h3>The Feed Tab</h3>
-  <p>The <strong>Feed</strong> tab (default view) shows all collected LinkedIn jobs, newest first. Each job card displays:</p>
+  <h3>Feed View Modes</h3>
+  <p>Inside the Feed tab, three view modes let you focus on what matters today:</p>
+  <ul>
+    <li><strong>All</strong> — Jobs and posts merged together, sorted by newest first.</li>
+    <li><strong>Posts</strong> — Only people's LinkedIn posts sharing opportunities.</li>
+    <li><strong>Jobs</strong> — Only official LinkedIn job board listings.</li>
+  </ul>
+  <p>Switch between them using the segmented control in the filter bar. Your selection is remembered between sessions.</p>
 
+  <div class="callout callout-tip">
+    <span class="icon"><i class="fa-solid fa-lightbulb"></i></span>
+    <div class="callout-content">
+      <strong>Why posts are valuable</strong>
+      A lot of NYC and remote job listings on LinkedIn's official board are fake or already filled. People who share real openings to their feed tend to be actively recruiting — these opportunities are often fresher and more legitimate.
+    </div>
+  </div>
+
+  <h3>Job Cards</h3>
+  <p>Each job listing card shows:</p>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Element</th><th>What it shows</th></tr></thead>
+      <thead><tr><th>Element</th><th>What it does</th></tr></thead>
       <tbody>
-        <tr><td><strong>Job title</strong></td><td>The role title (e.g., "Creative Project Manager")</td></tr>
+        <tr><td><strong>Job title</strong></td><td>The role title — click to open on LinkedIn</td></tr>
         <tr><td><strong>Company name &amp; link</strong></td><td>Click to open the company page on LinkedIn</td></tr>
-        <tr><td><strong>Location · Type · Seniority · Posted · Applicants</strong></td><td>The job's meta row with quick-glance details</td></tr>
+        <tr><td><strong>Location · Type · Seniority · Posted · Applicants</strong></td><td>Quick-glance meta row</td></tr>
         <tr><td><strong>Salary pill</strong></td><td>Highlighted in green when the listing includes a salary range</td></tr>
-        <tr><td><strong>Function &amp; industry tags</strong></td><td>The job function (e.g. "Project Management") and industry (e.g. "Marketing Services")</td></tr>
-        <tr><td><strong>Job description</strong></td><td>The full description (long ones can be expanded with "see more")</td></tr>
-        <tr><td><strong>Apply button</strong></td><td>Opens the LinkedIn apply URL. Shows an "Easy Apply" badge when applicable.</td></tr>
-        <tr><td><strong>View on LinkedIn button</strong></td><td>Opens the original job posting on LinkedIn</td></tr>
-        <tr><td><strong>Copy button</strong></td><td>Copies the full job details + your Claude prompt to clipboard</td></tr>
-        <tr><td><strong>Mark as Applied toggle</strong></td><td>Click to mark a job as applied (turns green with a tick). Click again to undo. Saved to your database so it persists across sessions and devices.</td></tr>
-        <tr><td><strong>Hide button</strong></td><td>Removes a listing from your feed so it stops appearing. A 3-second countdown bar gives you time to cancel before it disappears. You can unhide jobs from the Filters panel at any time.</td></tr>
+        <tr><td><strong>Job description</strong></td><td>Full description (expand with "see more" for long ones)</td></tr>
+        <tr><td><strong>Copy button</strong></td><td>Copies job details + your Claude prompt to clipboard for AI cover letter generation</td></tr>
+        <tr><td><strong>Mark as Applied</strong></td><td>Turns green with a tick. Saved to the database — persists across devices.</td></tr>
+        <tr><td><strong>Hide button</strong></td><td>Removes the listing. A 3-second countdown lets you undo before it disappears.</td></tr>
+        <tr><td><strong>Apply / Easy Apply button</strong></td><td>Opens the LinkedIn application page directly</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Post Cards</h3>
+  <p>Each LinkedIn post card shows:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Element</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Poster avatar &amp; name</strong></td><td>The person or company who shared the post — click to open their LinkedIn profile</td></tr>
+        <tr><td><strong>Author info &amp; time</strong></td><td>Follower count or job title, and how long ago it was posted</td></tr>
+        <tr><td><strong>Post content</strong></td><td>The post text (expand with "see more" for long posts)</td></tr>
+        <tr><td><strong>Post images</strong></td><td>Any images attached to the post</td></tr>
+        <tr><td><strong>Engagement row</strong></td><td>Like / comment / repost counts</td></tr>
+        <tr><td><strong>Copy button</strong></td><td>Copies the post content + your Claude prompt to clipboard — useful for writing a personalised outreach message</td></tr>
+        <tr><td><strong>Save (star) toggle</strong></td><td>Stars the post amber so you can find it again later. Saved to the database.</td></tr>
+        <tr><td><strong>Hide button</strong></td><td>Removes the post with a 3-second undo window. Reveal hidden posts from the Filters panel.</td></tr>
+        <tr><td><strong>View on LinkedIn button</strong></td><td>Opens the original post on LinkedIn</td></tr>
       </tbody>
     </table>
   </div>
@@ -757,74 +869,84 @@
   <div class="callout callout-tip">
     <span class="icon"><i class="fa-solid fa-lightbulb"></i></span>
     <div class="callout-content">
-      <strong>Applied &amp; Hidden states are saved to the database</strong>
-      When you mark a job as applied or hide it, that change is saved directly to your Supabase database — not just your browser. This means your applied/hidden history is available even if you open the dashboard on a different device or browser, as long as you've entered your Supabase credentials.
+      <strong>Applied, Saved &amp; Hidden states persist</strong>
+      All three states (Applied on job cards, Saved/Hidden on post cards, Hidden on job cards) are written to your Supabase database — not just your browser. They'll be there when you reopen the dashboard on any device.
     </div>
   </div>
 
   <h3>Searching &amp; Filtering</h3>
 
   <h4>Search bar</h4>
-  <p>Type any word or phrase in the search bar at the top of the feed. The dashboard instantly filters to show only jobs matching that text (in the job title, company name, or description).</p>
+  <p>Type any word or phrase to instantly filter the feed. For jobs, it searches title, company, and description. For posts, it searches the post text and author name.</p>
 
   <h4>Date filter pills</h4>
   <p>Click one of the date buttons to narrow the feed by recency:</p>
   <ul>
-    <li><span class="badge badge-blue">Today</span> - Jobs collected today</li>
-    <li><span class="badge badge-blue">Week</span> - Jobs from the last 7 days</li>
-    <li><span class="badge badge-blue">Month</span> - Jobs from the last 30 days</li>
-    <li><span class="badge badge-blue">Year</span> - Jobs from the last 12 months</li>
-    <li><span class="badge badge-blue">All</span> - All jobs ever collected</li>
+    <li><span class="badge badge-blue">Last 24h</span> – Items from the past 24 hours</li>
+    <li><span class="badge badge-blue">Week</span> – Items from the last 7 days</li>
+    <li><span class="badge badge-blue">Month</span> – Items from the last 30 days</li>
+    <li><span class="badge badge-blue">Year</span> – Items from the last 12 months</li>
+    <li><span class="badge badge-blue">All</span> – Everything ever collected</li>
   </ul>
 
   <h4>Filters panel</h4>
-  <p>Click the <strong>Filters</strong> button to open advanced filters:</p>
+  <p>Click the <strong>Filters</strong> button for advanced controls:</p>
   <ul>
-    <li><strong>Show jobs mentioning</strong> - Only show jobs that mention these words in title, description, location, or company (e.g., <em>remote</em>, <em>senior</em>)</li>
-    <li><strong>Hide jobs mentioning</strong> - Hide jobs that mention these words (e.g., <em>unpaid</em>, <em>commission only</em>)</li>
+    <li><strong>Easy Apply only</strong> (jobs view) — filter to one-click applications</li>
+    <li><strong>Employment type</strong> (jobs view) — Full-time, Contract, Part-time, etc.</li>
+    <li><strong>Seniority level</strong> (jobs view) — Entry level, Mid-Senior, Director, etc.</li>
+    <li><strong>Show hidden</strong> — reveals all hidden items as faded cards so you can unhide them</li>
+    <li><strong>Match in content / location</strong> — only show items containing this text</li>
+    <li><strong>Hide items containing</strong> — permanently filter out items with these keywords (e.g. <em>unpaid</em>, <em>commission only</em>)</li>
   </ul>
-  <p>These filters are saved to your database automatically and persist across sessions.</p>
+  <p>Note: Employment type, seniority, and Easy Apply filters only apply to job cards — they're hidden automatically in Posts view.</p>
 
   <h3>Refreshing the Feed Manually</h3>
-  <p>Click the <strong>Refresh Feed</strong> button (top-right of the navigation bar) to trigger a scrape immediately - without waiting for the next scheduled time. This is useful when you've just added new job titles or want the very latest postings right now.</p>
+  <p>Click the <strong>Refresh Feed</strong> button (top-right of the navigation bar) to trigger a scrape immediately. The button is smart about which view you're in:</p>
+  <ul>
+    <li><strong>All view</strong> — fires both the jobs scraper and the posts scraper in parallel</li>
+    <li><strong>Jobs view</strong> — fires only the jobs scraper</li>
+    <li><strong>Posts view</strong> — fires only the posts scraper</li>
+  </ul>
+  <p>Each scraper respects its own toggle — if it's switched off in Settings, the edge function exits early without spending any Apify credits.</p>
 
   <div class="callout callout-info">
     <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
     <div class="callout-content">
       <strong>Why does refreshing take a moment?</strong>
-      After clicking Refresh Feed, the dashboard sends a request to start scraping. The scraper runs in the background and can take 1–3 minutes depending on how many job titles you have. New jobs will appear in the feed automatically as soon as they're collected - no need to reload the page.
+      After clicking Refresh Feed, scraping runs in the background — it can take 1–3 minutes depending on how many keywords you have. New results appear automatically in the feed as soon as they land — no page reload needed.
     </div>
   </div>
 
-  <h3>Application Workflow</h3>
+  <h3>Outreach Workflow</h3>
 
   <div class="steps">
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
-        <h4>Find a promising job</h4>
-        <p>Browse the feed or search by keyword. Look for roles that match your skills and the salary / location you want.</p>
+        <h4>Find a promising opportunity</h4>
+        <p>Browse the feed — switch between All / Posts / Jobs to focus on what's most relevant today. Use search or filters to narrow down.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
         <h4>Click Copy</h4>
-        <p>Click the <strong>Copy</strong> button on the job card. The full job posting plus your Claude prompt is now in your clipboard.</p>
+        <p>Click the <strong>Copy</strong> button on any card. The content (job posting or post text) plus your configured Claude prompt is now in your clipboard.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
         <h4>Paste into Claude or ChatGPT</h4>
-        <p>Open <strong>claude.ai</strong> or <strong>chatgpt.com</strong>, paste (<kbd>Ctrl+V</kbd> or <kbd>Cmd+V</kbd>), and press Enter. The AI will write a tailored cover letter based on the job description.</p>
+        <p>Open <strong>claude.ai</strong> or <strong>chatgpt.com</strong>, paste (<kbd>Ctrl+V</kbd> or <kbd>Cmd+V</kbd>), and press Enter. The AI will write a tailored cover letter or outreach message.</p>
       </div>
     </div>
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
-        <h4>Apply</h4>
-        <p>Review the AI-generated cover letter, tweak if needed, then click <strong>Apply</strong> on the job card to open the LinkedIn application page.</p>
+        <h4>Apply or reach out</h4>
+        <p>For jobs: click <strong>Apply</strong> on the card to open the LinkedIn application page. For posts: click <strong>View on LinkedIn</strong> to open the post and comment or message the poster directly.</p>
       </div>
     </div>
   </div>
@@ -840,11 +962,11 @@
 
   <p>The refresh schedule works as follows:</p>
   <ol>
-    <li>At the scheduled times, a database job (called a <em>cron job</em>) automatically triggers the scraper.</li>
-    <li>The scraper reads your active job titles and scraper settings from the database.</li>
-    <li>For each job title, it calls Apify to collect matching LinkedIn jobs using your global Location and filters.</li>
-    <li>New jobs are saved to the database and appear in your feed in real time.</li>
-    <li>Duplicate jobs (matched by LinkedIn job ID) are automatically updated, not duplicated - you won't see the same listing twice.</li>
+    <li>At the scheduled times, a database cron job automatically triggers both edge functions (jobs and posts) — each respects its own <em>is_active</em> toggle, so a disabled scraper exits immediately without spending credits.</li>
+    <li>The jobs scraper reads your active job titles and settings, then calls Apify for each title.</li>
+    <li>The posts scraper reads your active post search queries and settings, then calls Apify for each query.</li>
+    <li>New items are saved to the database and appear in your feed in real time.</li>
+    <li>Duplicates (matched by LinkedIn post ID or job ID) are automatically updated, not duplicated — you won't see the same item twice.</li>
   </ol>
 
   <div class="callout callout-key">
@@ -892,34 +1014,52 @@
     <li>Your applied/hidden job states and search keywords are preserved in the export. Job listings will refill automatically on the next scheduled scrape.</li>
   </ul>
 
-  <h3>Feed is empty after clicking "Refresh Feed"</h3>
+  <h3>Jobs feed is empty after clicking "Refresh Feed"</h3>
   <ul>
+    <li>Make sure the <strong>Jobs scraper toggle</strong> (Settings → Scraper Toggles) is switched <strong>on</strong>.</li>
     <li>Make sure you've added at least one job title in Settings → Job title searches.</li>
     <li>Make sure a <strong>Location</strong> is set in Scraper Settings (without one, results may be empty).</li>
-    <li>Check that your Apify API token is correct - test it by logging into apify.com and checking your account.</li>
-    <li>Wait 2–3 minutes after clicking Refresh - scraping takes time.</li>
-    <li>Check the <strong>Date filter</strong> - if it's set to <em>Today</em> and no jobs were scraped yet today, switch to <em>All</em>.</li>
+    <li>Check that your Apify API token (jobs) is correct — test it by logging into apify.com.</li>
+    <li>Wait 2–3 minutes after clicking Refresh — scraping takes time.</li>
+    <li>Check the <strong>Date filter</strong> — if it's set to <em>Last 24h</em> and no jobs were scraped today yet, switch to <em>All</em>.</li>
+  </ul>
+
+  <h3>Posts feed is empty after clicking "Refresh Feed"</h3>
+  <ul>
+    <li>Make sure the <strong>Posts scraper toggle</strong> (Settings → Scraper Toggles) is switched <strong>on</strong>.</li>
+    <li>Make sure you've added at least one query in Settings → Post searches.</li>
+    <li>Make sure the <strong>Apify API token (posts)</strong> field in Posts Scraper Settings is filled in — it can be the same token as the jobs scraper.</li>
+    <li>Try broadening your post search queries — very specific phrases may return 0 results.</li>
+    <li>The <strong>Posted limit</strong> defaults to 24h — if no posts matched in that window, switch it to <em>week</em> in Posts Scraper Settings and refresh again.</li>
+    <li>Make sure you're on the <strong>Posts</strong> or <strong>All</strong> view tab in the Feed — the Jobs view won't show posts.</li>
   </ul>
 
   <h3>The automatic schedule isn't running</h3>
   <ul>
     <li>Verify the pg_cron SQL was run successfully in Supabase (no error message when you ran it).</li>
-    <li>Make sure the Edge Function is deployed - run <code>supabase functions deploy linkedin-refresh --no-verify-jwt</code> again if unsure.</li>
-    <li>Note that scheduled times are in UTC - if you're on a different timezone, double-check the conversion.</li>
+    <li>Make sure both Edge Functions are deployed — <code>linkedin-refresh</code> and <code>linkedin-posts-refresh</code> should both appear under <strong>Edge Functions</strong> in the Supabase dashboard.</li>
+    <li>Note that scheduled times are in UTC — if you're on a different timezone, double-check the conversion.</li>
   </ul>
 
   <h3>"Refresh Feed" shows an error banner</h3>
   <ul>
-    <li>The automation script may not be deployed. Run the deploy command from Phase D, Step 4.</li>
-    <li>Check that the Supabase Edge Function is listed under <strong>Edge Functions</strong> in your Supabase project dashboard.</li>
+    <li>Check that both Edge Functions (<code>linkedin-refresh</code> and <code>linkedin-posts-refresh</code>) are deployed and show status <em>Active</em> in Supabase → Edge Functions.</li>
+    <li>A "partial failure" banner means one scraper succeeded and the other failed — check which one and investigate that function's logs in Supabase.</li>
   </ul>
 
   <h3>Jobs not showing despite a successful refresh</h3>
   <ul>
-    <li>LinkedIn may not have returned results for your job titles in that location - try broader titles or a wider location (e.g., the country instead of a city).</li>
-    <li>Apify's free plan may have run out of monthly compute budget - check your usage on apify.com.</li>
-    <li>Make sure the <strong>Job posting time</strong> filter isn't too narrow (e.g., set to "Past 24 hours" when no fresh jobs were posted today).</li>
-    <li>Check whether your <strong>Experience level</strong> / <strong>Job type</strong> / <strong>Work schedule</strong> filters are too restrictive - set any of them to "Any" to widen the search.</li>
+    <li>LinkedIn may not have returned results for your job titles in that location — try broader titles or a wider location.</li>
+    <li>Apify's free plan may have run out of monthly compute budget — check your usage on apify.com.</li>
+    <li>Make sure the <strong>Job posting time</strong> filter isn't too narrow (e.g. "Past 24 hours" when no fresh jobs were posted today).</li>
+    <li>Check whether your <strong>Experience level</strong> / <strong>Job type</strong> / <strong>Work schedule</strong> filters are too restrictive — set them to "Any" to widen the search.</li>
+  </ul>
+
+  <h3>A post keyword I added isn't showing in the database</h3>
+  <ul>
+    <li>Make sure you clicked <strong>Save All Settings</strong> after adding the keyword. The button only appears when there are unsaved changes.</li>
+    <li>Check the browser console (F12 → Console) for any error starting with <code>[Post keywords sync]</code>.</li>
+    <li>Verify that the <code>posts_search_keywords_lexiecoon</code> table exists in your Supabase project — it's created by the posts migration SQL.</li>
   </ul>
 
   <div class="callout callout-info">

@@ -117,7 +117,11 @@ async function runScrape(supabaseUrl: string, serviceKey: string) {
     .single()
 
   if (cfgErr || !config) {
-    console.error('[linkedin-refresh] Config fetch error:', cfgErr?.message ?? 'no row returned')
+    console.warn('[linkedin-refresh] No active jobs config — scraper toggled off or row missing:', cfgErr?.message ?? 'no row')
+    return
+  }
+  if (!config.apify_token) {
+    console.warn('[linkedin-refresh] Apify token missing on jobs config row — skip')
     return
   }
   console.log('[linkedin-refresh] Config loaded. has_token:', Boolean(config.apify_token))

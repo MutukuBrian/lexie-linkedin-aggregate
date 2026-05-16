@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
-import { Feed } from './components/Feed';
+import { Feed, type ViewMode } from './components/Feed';
 import { SettingsPanel } from './components/Settings';
 import { Settings, Briefcase, RefreshCw, AlertCircle } from 'lucide-react';
 import logo from './LOGO.png';
@@ -12,6 +12,7 @@ type Tab = 'feed' | 'settings';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('feed');
+  const [viewMode, setViewMode] = useState<ViewMode>('all');
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [webhookError, setWebhookError] = useState<string | null>(null);
@@ -19,7 +20,7 @@ function Dashboard() {
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Called by Feed when the first realtime INSERT fires after a refresh.
-  const onJobsArrived = useCallback(() => {
+  const onItemsArrived = useCallback(() => {
     if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
     setRefreshing(false);
     setRefreshKey(k => k + 1);
@@ -37,13 +38,40 @@ function Dashboard() {
         setRefreshing(false);
         return;
       }
-      const { error } = await supabase.functions.invoke('linkedin-refresh');
-      if (error) {
-        setWebhookError(`Refresh failed: ${error.message}`);
+
+      const fireJobs  = viewMode === 'jobs'  || viewMode === 'all';
+      const firePosts = viewMode === 'posts' || viewMode === 'all';
+
+      const invocations: Promise<{ name: string; error: any }>[] = [];
+      if (fireJobs) {
+        invocations.push(
+          supabase.functions.invoke('linkedin-refresh').then((res: { error: any }) => ({ name: 'jobs', error: res.error }))
+        );
+      }
+      if (firePosts) {
+        invocations.push(
+          supabase.functions.invoke('linkedin-posts-refresh').then((res: { error: any }) => ({ name: 'posts', error: res.error }))
+        );
+      }
+
+      const results = await Promise.allSettled(invocations);
+      const failures: string[] = [];
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value.error) {
+          failures.push(`${r.value.name}: ${r.value.error.message}`);
+        } else if (r.status === 'rejected') {
+          failures.push(String(r.reason));
+        }
+      }
+      if (failures.length === results.length) {
+        setWebhookError(`Refresh failed — ${failures.join(' | ')}`);
         setRefreshing(false);
         return;
       }
-      // 202 received — scraping is running in background.
+      if (failures.length > 0) {
+        setWebhookError(`Partial failure — ${failures.join(' | ')}`);
+      }
+      // 202s received — scraping is running in background.
       // Keep the spinner going until Feed reports a realtime INSERT,
       // or until the 3-minute safety timeout fires.
       safetyTimerRef.current = setTimeout(() => {
@@ -55,6 +83,10 @@ function Dashboard() {
       setRefreshing(false);
     }
   };
+
+  const refreshLabel = refreshing
+    ? viewMode === 'jobs' ? 'Scraping jobs...' : viewMode === 'posts' ? 'Scraping posts...' : 'Scraping...'
+    : 'Refresh Feed';
 
   return (
     <div className="min-h-screen font-sans selection:bg-zinc-200" style={{ backgroundColor: '#F4F2EE' }}>
@@ -104,7 +136,7 @@ function Dashboard() {
             style={{ background: 'linear-gradient(135deg, #2563EB 0%, #38BDF8 100%)' }}
           >
             <RefreshCw className={cn("w-3.5 h-3.5", refreshing && "animate-spin")} />
-            <span className="hidden sm:block">{refreshing ? 'Scraping jobs...' : 'Refresh Feed'}</span>
+            <span className="hidden sm:block">{refreshLabel}</span>
           </button>
         </div>
       </nav>
@@ -121,7 +153,9 @@ function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto min-h-[calc(100vh-73px)]">
-        {activeTab === 'feed' ? <Feed refreshKey={refreshKey} onJobsArrived={onJobsArrived} /> : <SettingsPanel />}
+        {activeTab === 'feed'
+          ? <Feed refreshKey={refreshKey} onItemsArrived={onItemsArrived} viewMode={viewMode} onViewModeChange={setViewMode} />
+          : <SettingsPanel />}
       </main>
 
     </div>

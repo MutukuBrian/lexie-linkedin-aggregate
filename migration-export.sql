@@ -180,3 +180,182 @@ VALUES (
   'project manager',
   true
 ) ON CONFLICT (keyword) DO NOTHING;
+
+
+-- ============================================================
+-- POSTS PIPELINE — second scraper (harvestapi~linkedin-post-search)
+-- Runs alongside the jobs pipeline; each is gated by its own is_active.
+-- ============================================================
+
+-- ─────────────────────────────────────────────
+-- 7. POSTS TABLES
+-- ─────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS public.linkedin_posts_lexiecoon (
+  id              text                     NOT NULL,
+  post_url        text,
+  content         text,
+  poster_name     text,
+  poster_url      text,
+  poster_type     text,
+  author_info     text,
+  avatar_url      text,
+  post_images     jsonb                    DEFAULT '[]'::jsonb,
+  engagement      jsonb                    DEFAULT '{}'::jsonb,
+  posted_at       timestamp with time zone,
+  posted_ago_text text,
+  query_keyword   text,
+  saved           boolean                  DEFAULT false,
+  hidden          boolean                  DEFAULT false,
+  created_at      timestamp with time zone DEFAULT now(),
+  updated_at      timestamp with time zone DEFAULT now(),
+  CONSTRAINT linkedin_posts_lexiecoon_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.posts_scraper_settings_lexiecoon (
+  id                   uuid                     NOT NULL DEFAULT gen_random_uuid(),
+  configs_name         text                     DEFAULT 'default',
+  is_active            boolean                  DEFAULT true,
+  apify_token          text                     DEFAULT ''::text,
+  max_posts            integer                  DEFAULT 10,
+  posted_limit         text                     DEFAULT '24h'::text,
+  posted_limit_date    text                     DEFAULT ''::text,
+  sort_by              text                     DEFAULT 'date'::text,
+  content_type         text                     DEFAULT 'all'::text,
+  author_urls          text                     DEFAULT ''::text,
+  authors_companies    text                     DEFAULT ''::text,
+  mentioning_member    text                     DEFAULT ''::text,
+  mentioning_company   text                     DEFAULT ''::text,
+  authors_industry_id  text                     DEFAULT ''::text,
+  author_keywords      text                     DEFAULT ''::text,
+  start_page           integer                  DEFAULT 1,
+  scrape_pages         integer                  DEFAULT 1,
+  scrape_reactions     boolean                  DEFAULT false,
+  max_reactions        integer                  DEFAULT 5,
+  scrape_comments      boolean                  DEFAULT false,
+  max_comments         integer                  DEFAULT 10,
+  created_at           timestamp with time zone DEFAULT now(),
+  updated_at           timestamp with time zone DEFAULT now(),
+  CONSTRAINT posts_scraper_settings_lexiecoon_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.posts_search_keywords_lexiecoon (
+  id          uuid                     NOT NULL DEFAULT gen_random_uuid(),
+  keyword     text                     NOT NULL,
+  is_active   boolean                  DEFAULT true,
+  created_at  timestamp with time zone DEFAULT now(),
+  CONSTRAINT posts_search_keywords_lexiecoon_pkey       PRIMARY KEY (id),
+  CONSTRAINT posts_search_keywords_lexiecoon_keyword_key UNIQUE (keyword)
+);
+
+
+-- ─────────────────────────────────────────────
+-- 8. ENABLE RLS ON POSTS TABLES
+-- ─────────────────────────────────────────────
+
+ALTER TABLE public.linkedin_posts_lexiecoon          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.posts_scraper_settings_lexiecoon  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.posts_search_keywords_lexiecoon   ENABLE ROW LEVEL SECURITY;
+
+
+-- ─────────────────────────────────────────────
+-- 9. RLS POLICIES — linkedin_posts_lexiecoon
+-- ─────────────────────────────────────────────
+
+CREATE POLICY "Public read posts"
+  ON public.linkedin_posts_lexiecoon
+  FOR SELECT
+  TO public
+  USING (true);
+
+CREATE POLICY "Allow anon update posts"
+  ON public.linkedin_posts_lexiecoon
+  FOR UPDATE
+  TO anon
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "Service write posts"
+  ON public.linkedin_posts_lexiecoon
+  FOR ALL
+  TO public
+  USING (auth.role() = 'service_role');
+
+
+-- ─────────────────────────────────────────────
+-- 10. RLS POLICIES — posts_scraper_settings_lexiecoon
+-- ─────────────────────────────────────────────
+
+CREATE POLICY "anon read posts settings"
+  ON public.posts_scraper_settings_lexiecoon
+  FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "anon update posts settings"
+  ON public.posts_scraper_settings_lexiecoon
+  FOR UPDATE
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "anon upsert posts settings"
+  ON public.posts_scraper_settings_lexiecoon
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);
+
+
+-- ─────────────────────────────────────────────
+-- 11. RLS POLICIES — posts_search_keywords_lexiecoon
+-- ─────────────────────────────────────────────
+
+CREATE POLICY "anon read posts keywords"
+  ON public.posts_search_keywords_lexiecoon
+  FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "anon insert posts keywords"
+  ON public.posts_search_keywords_lexiecoon
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);
+
+CREATE POLICY "anon update posts keywords"
+  ON public.posts_search_keywords_lexiecoon
+  FOR UPDATE
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "anon delete posts keywords"
+  ON public.posts_search_keywords_lexiecoon
+  FOR DELETE
+  TO anon, authenticated
+  USING (true);
+
+
+-- ─────────────────────────────────────────────
+-- 12. REALTIME — broadcast new posts to the dashboard
+-- ─────────────────────────────────────────────
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.linkedin_posts_lexiecoon;
+
+
+-- ─────────────────────────────────────────────
+-- 13. POSTS SEED DATA — single default config row
+-- ─────────────────────────────────────────────
+
+INSERT INTO public.posts_scraper_settings_lexiecoon (
+  id, configs_name, is_active, apify_token,
+  max_posts, posted_limit, sort_by, content_type,
+  start_page, scrape_pages
+) VALUES (
+  '00000000-0000-0000-0000-000000000001',
+  'default',
+  true,
+  '',                       -- paste your Apify token via the Settings UI
+  10, '24h', 'date', 'all',
+  1, 1
+) ON CONFLICT (id) DO NOTHING;
