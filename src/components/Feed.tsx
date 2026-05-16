@@ -8,11 +8,11 @@ import { cn } from '../lib/utils';
 type DateRange = 'today' | 'week' | 'month' | 'year' | 'all';
 
 const DATE_RANGE_OPTIONS: { label: string; value: DateRange }[] = [
+  { label: 'All', value: 'all' },
   { label: 'Last 24h', value: 'today' },
   { label: 'Week', value: 'week' },
   { label: 'Month', value: 'month' },
   { label: 'Year', value: 'year' },
-  { label: 'All', value: 'all' },
 ];
 
 const EMPLOYMENT_TYPE_OPTIONS = ['Full-time', 'Part-time', 'Contract', 'Temporary', 'Internship'];
@@ -20,13 +20,23 @@ const SENIORITY_LEVEL_OPTIONS = ['Internship', 'Entry level', 'Associate', 'Mid-
 
 const FILTER_STORAGE_KEY = 'linkedin_feed_filters_v2';
 
-const getDateCutoff = (range: DateRange): Date | null => {
-  const now = new Date();
-  if (range === 'today') return new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  if (range === 'week') { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
-  if (range === 'month') { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d; }
-  if (range === 'year') { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return d; }
-  return null;
+// Parses LinkedIn's relative time strings (e.g. "3 weeks ago") to decide
+// if a post falls within the selected filter bucket. Filters are inclusive:
+// "Last 24h" ⊂ "Week" ⊂ "Month" ⊂ "Year" ⊂ "All".
+const matchesTimePosted = (timePosted: string | null | undefined, range: DateRange): boolean => {
+  if (range === 'all') return true;
+  if (!timePosted) return true;
+  const t = timePosted.toLowerCase();
+  const hasRecent = t.includes('minute') || t.includes('just now') || t.includes('moment') || t.includes('second');
+  const hasHour   = t.includes('hour');
+  const hasDay    = t.includes('day');
+  const hasWeek   = t.includes('week');
+  const hasMonth  = t.includes('month');
+  if (range === 'today') return hasRecent || hasHour;
+  if (range === 'week')  return hasRecent || hasHour || hasDay;
+  if (range === 'month') return hasRecent || hasHour || hasDay || hasWeek;
+  if (range === 'year')  return hasRecent || hasHour || hasDay || hasWeek || hasMonth;
+  return true;
 };
 
 export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }> = ({ refreshKey = 0, onJobsArrived }) => {
@@ -38,7 +48,7 @@ export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }>
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange>('today');
+  const [dateRange, setDateRange] = useState<DateRange>('all');
 
   // Structured filters
   const [employmentTypes, setEmploymentTypes] = useState<string[]>([]);
@@ -66,6 +76,7 @@ export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }>
       const saved = localStorage.getItem(FILTER_STORAGE_KEY);
       if (saved) {
         const p = JSON.parse(saved);
+        if (p.dateRange) setDateRange(p.dateRange as DateRange);
         setEmploymentTypes(p.employmentTypes || []);
         setSeniorityLevels(p.seniorityLevels || []);
         setEasyApplyOnly(p.easyApplyOnly || false);
@@ -77,6 +88,7 @@ export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }>
   }, []);
 
   const persistFilters = (patch: Partial<{
+    dateRange: DateRange;
     employmentTypes: string[];
     seniorityLevels: string[];
     easyApplyOnly: boolean;
@@ -84,7 +96,7 @@ export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }>
     locationFilter: string;
     excludeTerms: string[];
   }>) => {
-    const current = { employmentTypes, seniorityLevels, easyApplyOnly, showHidden, locationFilter, excludeTerms, ...patch };
+    const current = { dateRange, employmentTypes, seniorityLevels, easyApplyOnly, showHidden, locationFilter, excludeTerms, ...patch };
     localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(current));
   };
 
@@ -144,6 +156,7 @@ export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }>
   };
 
   const clearAllFilters = () => {
+    setDateRange('all');
     setEmploymentTypes([]);
     setSeniorityLevels([]);
     setEasyApplyOnly(false);
@@ -198,7 +211,6 @@ export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }>
   }, [isConfigured, settings.supabaseUrl, settings.supabaseAnonKey]);
 
   // Client-side filtering
-  const dateCutoff = getDateCutoff(dateRange);
   const filteredJobs = jobs.filter(job => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -208,7 +220,7 @@ export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }>
       if (!hit) return false;
     }
 
-    if (dateCutoff && job.created_at && new Date(job.created_at) < dateCutoff) return false;
+    if (!matchesTimePosted(job.time_posted, dateRange)) return false;
 
     if (easyApplyOnly && !job.easy_apply) return false;
 
@@ -305,7 +317,7 @@ export const Feed: React.FC<{ refreshKey?: number; onJobsArrived?: () => void }>
           {DATE_RANGE_OPTIONS.map(({ label, value }) => (
             <button
               key={value}
-              onClick={() => setDateRange(value)}
+              onClick={() => { setDateRange(value); persistFilters({ dateRange: value }); }}
               className={cn(
                 "px-3 py-1 rounded-full text-[11px] font-semibold border transition-all",
                 dateRange === value
