@@ -32,6 +32,21 @@ const formatCount = (n: number) => {
   return String(n);
 };
 
+const formatRelative = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return '';
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60_000);
+    if (m < 1)  return 'just now';
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    const d = Math.floor(h / 24);
+    if (d < 7)  return `${d}d`;
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch { return ''; }
+};
+
 const CONTENT_LIMIT = 350;
 
 export const PostCard: React.FC<PostCardProps> = ({ post, onSaved, onHidden }) => {
@@ -76,7 +91,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onSaved, onHidden }) =
 
   const initials = (post.poster_name ?? '?').split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
   const avatarUrl: string | null = post.avatar_url ?? null;
-  const ago = post.posted_ago_text || post.posted_ago_short || '';
+  const ago = formatRelative(post.posted_at);
 
   const copyForClaude = async () => {
     const text = [

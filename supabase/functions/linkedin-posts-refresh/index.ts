@@ -105,8 +105,10 @@ async function scrapeKeyword(
       avatar_url:      p.author?.avatar?.url      ?? null,
       post_images:     Array.isArray(p.postImages) ? p.postImages : [],
       engagement:      p.engagement              ?? {},
-      posted_at:       p.postedAt?.date          ?? null,
-      posted_ago_text: p.postedAt?.postedAgoText ?? null,
+      posted_at:       p.postedAt?.timestamp
+                         ? new Date(p.postedAt.timestamp).toISOString()
+                         : (p.postedAt?.date ?? null),
+      posted_ago_text: null,
       query_keyword:   p.query?.search           ?? keyword,
       updated_at:      new Date().toISOString(),
     }))
